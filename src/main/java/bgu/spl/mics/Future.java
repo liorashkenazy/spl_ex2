@@ -11,7 +11,9 @@ import java.util.concurrent.TimeUnit;
  * No public constructor is allowed except for the empty constructor.
  */
 public class Future<T> {
-	
+
+	private T result = null;
+
 	/**
 	 * This should be the only public constructor in this class.
 	 */
@@ -25,7 +27,11 @@ public class Future<T> {
      * not been completed.
      * <p>
      * @return return the result of type T if it is available, if not wait until it is available.
-     * 	       
+	 * @INV: get() != null
+     * @POST: if(@PRE get(0,SECONDS) == null)
+	 * 			@POST get(0,SECONDS) != null
+	 * @POST: if(@PRE get(0,SECONDS) != null)
+	 * 			@PRE get(0,SECONDS) == @POST get(0,SECONDS)
      */
 	public T get() {
 		//TODO: implement this.
@@ -34,6 +40,8 @@ public class Future<T> {
 	
 	/**
      * Resolves the result of this Future object.
+	 * @POST get(0,SECONDS) == result
+	 * @POST: isDone() == true
      */
 	public void resolve (T result) {
 		//TODO: implement this.
@@ -41,6 +49,10 @@ public class Future<T> {
 	
 	/**
      * @return true if this object has been resolved, false otherwise
+	 * @INV: if(isDone())
+	 * 			 get(0,SECONDS) != null
+	 * @INV: if(!isDone ())
+	 *  	     get(0,SECONDS) == null
      */
 	public boolean isDone() {
 		//TODO: implement this.
@@ -57,6 +69,10 @@ public class Future<T> {
      * @return return the result of type T if it is available, if not, 
      * 	       wait for {@code timeout} TimeUnits {@code unit}. If time has
      *         elapsed, return null.
+	 * @POST: if (isDone())
+	 * 			get(timeout, unit) != null
+	 * @POST: if (!isDone())
+	 * 			get(timeout, unit) == null
      */
 	public T get(long timeout, TimeUnit unit) {
 		//TODO: implement this.
