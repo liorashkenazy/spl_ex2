@@ -1,7 +1,12 @@
 package bgu.spl.mics;
 
-import junit.framework.TestCase;
+import static org.junit.Assert.*;
+import org.junit.Test;
 
-public class MessageBusTest extends TestCase {
+public class MessageBusTest {
 
+    @Test
+    public void subscribeEvent() {
+        assertTrue("Testing~", true);
+    }
 }

@@ -10,13 +10,18 @@ package bgu.spl.mics.application.objects;
  */
 public class Cluster {
 
+	static Cluster instance;
+
+	private Cluster() { }
 
 	/**
      * Retrieves the single instance of this class.
      */
 	public static Cluster getInstance() {
-		//TODO: Implement this
-		return null;
+		if (instance == null) {
+			instance = new Cluster();
+		}
+		return instance;
 	}
 
 }
