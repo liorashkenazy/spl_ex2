@@ -18,4 +18,6 @@ public class Student {
     private int publications;
     private int papersRead;
 
+    public Student() {}
+
 }

@@ -16,4 +16,6 @@ public class DataBatch {
     }
 
     public Data getData() { return this.data; }
+
+    public int getStartIndex() { return start_index; }
 }
