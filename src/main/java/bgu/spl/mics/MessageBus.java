@@ -27,11 +27,10 @@ public interface MessageBus {
     /**
      * Checks if {@code m} is subscribed to receive {@link Message}s of type {@code type}
      * <p>
-     * @param <T>  The type of the result expected by the completed event.
      * @param type The type to subscribe to,
      * @param m    The subscribing micro-service.
      */
-    <T> boolean isSubscribedToMessage(Class<? extends Event<T>> type, MicroService m);
+    boolean isSubscribedToMessage(Class<? extends Message> type, MicroService m);
 
     /**
      * Subscribes {@code m} to receive {@link Broadcast}s of type {@code type}.
@@ -90,7 +89,7 @@ public interface MessageBus {
      * returns all of the {@link MicroService} registered to this MessageBus
      * <p>
      */
-    LinkedList<MicroService> getServices();
+    LinkedList<MicroService> getRegisteredServices();
 
     /**
      * Adds the {@link Event} {@code e} to the message queue of one of the
@@ -139,6 +138,7 @@ public interface MessageBus {
      * @param m the micro-service to check
      */
     boolean isRegistered(MicroService m);
+
 
     /**
      * Removes the message queue allocated to {@code m} via the call to
