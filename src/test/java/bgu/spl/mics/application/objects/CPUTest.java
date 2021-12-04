@@ -54,4 +54,19 @@ public class CPUTest {
         assertEquals("DataBatch not set, img type", db_img, cp_img.getData());
         assertEquals("Incorrect tick count of img data", 4, cp_img.getTicksLeftForBatch());
     }
+
+    @Test
+    public void getTotalCPUTime() {
+        CPU cp = new CPU(32, Cluster.getInstance());
+
+        assertEquals("Incorrect initial CPU time", 0, cp.getTotalCPUTime());
+        cp.tick();
+        assertEquals("Incorrect CPU time after tick without data", 0, cp.getTotalCPUTime());
+
+        Data dt = new Data(Data.Type.Tabular, 1000);
+        DataBatch db = new DataBatch(dt, 0);
+        cp.processData(db);
+        cp.tick();
+        assertEquals("Incorrect CPU time after tick with data", 1, cp.getTotalCPUTime());
+    }
 }

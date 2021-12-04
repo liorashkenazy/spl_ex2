@@ -11,6 +11,7 @@ public class CPU {
     private DataBatch data;
     private Cluster cluster;
     private int ticks_left;
+    private int total_cpu_time;
 
     /**
      * Constructs a CPU with the specified cluster and cores
@@ -24,6 +25,7 @@ public class CPU {
         this.cluster = cluster;
         this.data = null;
         this.ticks_left = 0;
+        this.total_cpu_time = 0;
     }
 
     /**
@@ -34,6 +36,8 @@ public class CPU {
      * @POST: @PRE(getTicksLeftForBatch()) - 1 == getTicksLeftForBatch()
      * @POST: if (getTicksLeftForBatch() == 0):
      *          getData() == null;
+     * @POST: if (getData() != null):
+     *           @PRE(getTotalCPUTime()) + 1 == getTotalCPUTime()
      */
     public void tick() {
         if (data != null) {
@@ -42,6 +46,7 @@ public class CPU {
                 // do something
                 data = null;
             }
+            total_cpu_time++;
         }
     }
 
@@ -50,7 +55,7 @@ public class CPU {
      * <p>
      * @return [int] The number of remaining ticks to finish processing the current data
      * @PRE: getData() != null;
-     * @INV: getTicksLeftForBatch() >= 0;
+     * @INV getTicksLeftForBatch() >= 0;
      */
     public int getTicksLeftForBatch() { return ticks_left; }
 
@@ -59,7 +64,7 @@ public class CPU {
      * <p>
      * @return The current {@link DataBatch} being processed
      * @PRE: getData() != null;
-     * @INV: getTicksLeftForBatch() >= 0;
+     * @INV getTicksLeftForBatch() >= 0;
      */
     public void processData(DataBatch data) {
         this.data = data;
@@ -82,4 +87,13 @@ public class CPU {
      * @return The current {@link DataBatch} being processed
      */
     public DataBatch getData() { return data; }
+
+    /**
+     * Return the total CPU time used
+     * <p>
+     * @return [int] Total CPU time used
+     * @INV getTotalCPUTime() >= 0
+     * @POST: @PRE(GetTotalCPUTime()) == getTotalCPUTime()
+     */
+    public int getTotalCPUTime() { return total_cpu_time; }
 }
