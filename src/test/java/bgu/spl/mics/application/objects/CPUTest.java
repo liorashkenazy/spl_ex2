@@ -43,6 +43,7 @@ public class CPUTest {
         DataBatch db_tab2 = new DataBatch(dt_tab, 1000);
         cp_tab.addDataForProcessing(db_tab2);
         assertTrue("Additional data batch is not in processing", cp_tab.isDataInProcessing(db_tab2));
+        assertEquals("New processing affected old one", db_tab, cp_tab.getData());
 
         CPU cp_txt = new CPU(32, Cluster.getInstance());
         Data dt_txt = new Data(Data.Type.Text, 1000);

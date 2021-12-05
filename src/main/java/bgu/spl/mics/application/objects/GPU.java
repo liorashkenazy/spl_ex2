@@ -50,7 +50,9 @@ public class GPU {
      * @POST: if (current_batch_ticks_left > 0):
      *          getTotalGPUTime() == @PRE(GetTotalGPUTime()) + 1
      * @POST: if (@PRE(current_batch_ticks_left == 1) && @PRE(GetNextBatchToProcess()) != null):
-     *          next_data_index_to_process = @PRE(next_data_index_to_process) + 1000
+     *          next_data_index_to_process == @PRE(next_data_index_to_process) + 1000
+     *          current_batch_ticks_left == getTicksForBatch()
+     *          getModel().getStatus() == Trained
      *
      */
     public void tick()
@@ -90,7 +92,7 @@ public class GPU {
      * @param train_model_finish_cb     The completion callback
      * @POST: getModel() == model;
      * @POST: model.getStatus() == Model.Status.Training
-     * @POST: getNextBatchToProcess().getStartIndex() == 1000 * getNextBatchToProcess()
+     * @POST: getNextBatchToProcess().getStartIndex() == 1000 * getMaxProcessedBatches()
      */
     public void trainModel(Model model, Runnable train_model_finish_cb) {
         this.model = model;
@@ -156,4 +158,12 @@ public class GPU {
      * @return [int] The number of data batches in the queue
      */
     public int getBatchTrainQueueLength() { return 0;}
+
+    /**
+     * Returns the number of ticks it takes to train a batch for this GPU
+     * <p>
+     * @return [int] The number of ticks
+     * @INV getTicksForBatch() >= 0;
+     */
+    public int getTicksForBatch() {return 0;}
 }

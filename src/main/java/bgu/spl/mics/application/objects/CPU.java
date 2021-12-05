@@ -35,7 +35,7 @@ public class CPU {
      * @PRE: getData() != null;
      * @POST: @PRE(getTicksLeftForBatch()) - 1 == getTicksLeftForBatch()
      * @POST: if (getTicksLeftForBatch() == 0):
-     *          getData() == null;
+     *          getData() != @PRE: getData();
      * @POST: if (getData() != null):
      *           @PRE(getTotalCPUTime()) + 1 == getTotalCPUTime()
      */

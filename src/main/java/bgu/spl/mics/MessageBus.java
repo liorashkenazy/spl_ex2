@@ -20,25 +20,31 @@ public interface MessageBus {
      * @param <T>  The type of the result expected by the completed event.
      * @param type The type to subscribe to,
      * @param m    The subscribing micro-service.
-     * @POST: isSubscribedToMessage(type, m) == true;
+     * @POST: if(isRegistered(m))
+     *          isSubscribedToMessage(type, m) == true;
+     * @POST: if(!isRegistered(m))
+     *          isSubscribedToMessage(type, m) == false;
+     *
      */
     <T> void subscribeEvent(Class<? extends Event<T>> type, MicroService m);
 
     /**
      * Checks if {@code m} is subscribed to receive {@link Message}s of type {@code type}
      * <p>
-     * @param <T>  The type of the result expected by the completed event.
      * @param type The type to subscribe to,
      * @param m    The subscribing micro-service.
      */
-    <T> boolean isSubscribedToMessage(Class<? extends Event<T>> type, MicroService m);
+    boolean isSubscribedToMessage(Class<? extends Message> type, MicroService m);
 
     /**
      * Subscribes {@code m} to receive {@link Broadcast}s of type {@code type}.
      * <p>
      * @param type 	The type to subscribe to.
      * @param m    	The subscribing micro-service.
-     * @POST: isSubscribedToMessage(type, m) == true;
+     * @POST: if(isRegistered(m))
+     *          isSubscribedToMessage(type, m) == true;
+     * @POST: if(!isRegistered(m))
+     *          isSubscribedToMessage(type, m) == false;
      */
     void subscribeBroadcast(Class<? extends Broadcast> type, MicroService m);
 
@@ -90,7 +96,7 @@ public interface MessageBus {
      * returns all of the {@link MicroService} registered to this MessageBus
      * <p>
      */
-    LinkedList<MicroService> getServices();
+    LinkedList<MicroService> getRegisteredServices();
 
     /**
      * Adds the {@link Event} {@code e} to the message queue of one of the
@@ -140,6 +146,7 @@ public interface MessageBus {
      */
     boolean isRegistered(MicroService m);
 
+
     /**
      * Removes the message queue allocated to {@code m} via the call to
      * {@link #register(bgu.spl.mics.MicroService)} and cleans all references
@@ -168,6 +175,6 @@ public interface MessageBus {
      * @PRE: isRegistered(m) == true
      * @POST: awaitMessage(m) != @PRE(awaitMessage(m))
      */
-    Message awaitMessage(MicroService m) throws InterruptedException;
+    Message awaitMessage(MicroService m) throws InterruptedException,IllegalStateException;
     
 }

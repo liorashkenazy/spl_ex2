@@ -9,6 +9,13 @@ import java.util.LinkedList;
  */
 public class MessageBusImpl implements MessageBus {
 
+	private LinkedList<MicroService> registered_ms;
+
+	public static MessageBusImpl getInstance() {
+		// TODO
+		return new MessageBusImpl();
+	}
+
 	@Override
 	public <T> void subscribeEvent(Class<? extends Event<T>> type, MicroService m) {
 		// TODO Auto-generated method stub
@@ -16,7 +23,7 @@ public class MessageBusImpl implements MessageBus {
 	}
 
 	@Override
-	public <T> boolean isSubscribedToMessage(Class<? extends Event<T>> type, MicroService m) {
+	public boolean isSubscribedToMessage(Class<? extends Message> type, MicroService m) {
 		return false;
 	}
 
@@ -49,8 +56,8 @@ public class MessageBusImpl implements MessageBus {
 	}
 
 	@Override
-	public LinkedList<MicroService> getServices() {
-		return null;
+	public LinkedList<MicroService> getRegisteredServices() {
+		return registered_ms;
 	}
 
 
@@ -68,7 +75,7 @@ public class MessageBusImpl implements MessageBus {
 	@Override
 	public void register(MicroService m) {
 		// TODO Auto-generated method stub
-
+		registered_ms.add(m);
 	}
 
 	@Override
@@ -79,7 +86,7 @@ public class MessageBusImpl implements MessageBus {
 	@Override
 	public void unregister(MicroService m) {
 		// TODO Auto-generated method stub
-
+		registered_ms.remove(m);
 	}
 
 	@Override
@@ -87,7 +94,4 @@ public class MessageBusImpl implements MessageBus {
 		// TODO Auto-generated method stub
 		return null;
 	}
-
-	
-
 }

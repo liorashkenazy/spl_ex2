@@ -40,23 +40,24 @@ public class Future<T> {
 	
 	/**
      * Resolves the result of this Future object.
-	 * @POST get(0,SECONDS) == result
+	 * @POST: get(0,SECONDS) == result
 	 * @POST: isDone() == true
      */
 	public void resolve (T result) {
 		//TODO: implement this.
+		this.result = result;
 	}
 	
 	/**
      * @return true if this object has been resolved, false otherwise
-	 * @INV: if(isDone())
-	 * 			 get(0,SECONDS) != null
-	 * @INV: if(!isDone ())
-	 *  	     get(0,SECONDS) == null
+	 * @INV: if(get(0,SECONDS) != null)
+	 * 			 isDone() == true
+	 * @INV: if(get(0,SECONDS) == null)
+	 *  	     isDone() == false
      */
 	public boolean isDone() {
 		//TODO: implement this.
-		return false;
+		return result != null;
 	}
 	
 	/**
