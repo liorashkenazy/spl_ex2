@@ -10,7 +10,7 @@ public class CPUTest {
         CPU cp = new CPU(16, Cluster.getInstance());
         Data dt = new Data(Data.Type.Tabular, 1000);
         DataBatch db = new DataBatch(dt, 0);
-        cp.processData(db);
+        cp.addDataForProcessing(db);
         assertEquals("Base tick count incorrect", 2, cp.getTicksLeftForBatch());
         cp.tick();
         assertEquals("Incorrect tick count", 1, cp.getTicksLeftForBatch());
@@ -27,32 +27,38 @@ public class CPUTest {
         Data dt = new Data(Data.Type.Tabular, 1000);
         DataBatch db = new DataBatch(dt, 0);
         assertNull("Data not null before setting it", cp.getData());
-        cp.processData(db);
+        cp.addDataForProcessing(db);
         assertEquals("Data not successfully set", db, cp.getData());
     }
 
     @Test
     public void processData() {
         CPU cp_tab = new CPU(32, Cluster.getInstance());
-        Data dt_tab = new Data(Data.Type.Tabular, 1000);
+        Data dt_tab = new Data(Data.Type.Tabular, 2000);
         DataBatch db_tab = new DataBatch(dt_tab, 0);
-        cp_tab.processData(db_tab);
+        cp_tab.addDataForProcessing(db_tab);
         assertEquals("DataBatch not set, tabular type", db_tab, cp_tab.getData());
         assertEquals("Incorrect tick count for tabular type", 1, cp_tab.getTicksLeftForBatch());
+        assertTrue("Tabular data is not in processing", cp_tab.isDataInProcessing(db_tab));
+        DataBatch db_tab2 = new DataBatch(dt_tab, 1000);
+        cp_tab.addDataForProcessing(db_tab2);
+        assertTrue("Additional data batch is not in processing", cp_tab.isDataInProcessing(db_tab2));
 
         CPU cp_txt = new CPU(32, Cluster.getInstance());
         Data dt_txt = new Data(Data.Type.Text, 1000);
         DataBatch db_txt = new DataBatch(dt_txt, 0);
-        cp_txt.processData(db_txt);
+        cp_txt.addDataForProcessing(db_txt);
         assertEquals("DataBatch not set, txt type", db_txt, cp_txt.getData());
         assertEquals("Incorrect tick count of txt data", 2, cp_txt.getTicksLeftForBatch());
+        assertTrue("TXT data is not in processing", cp_txt.isDataInProcessing(db_txt));
 
         CPU cp_img = new CPU(32, Cluster.getInstance());
         Data dt_img = new Data(Data.Type.Images, 1000);
         DataBatch db_img = new DataBatch(dt_img, 0);
-        cp_img.processData(db_img);
+        cp_img.addDataForProcessing(db_img);
         assertEquals("DataBatch not set, img type", db_img, cp_img.getData());
         assertEquals("Incorrect tick count of img data", 4, cp_img.getTicksLeftForBatch());
+        assertTrue("Image data is not in processing", cp_img.isDataInProcessing(db_img));
     }
 
     @Test
@@ -65,7 +71,7 @@ public class CPUTest {
 
         Data dt = new Data(Data.Type.Tabular, 1000);
         DataBatch db = new DataBatch(dt, 0);
-        cp.processData(db);
+        cp.addDataForProcessing(db);
         cp.tick();
         assertEquals("Incorrect CPU time after tick with data", 1, cp.getTotalCPUTime());
     }

@@ -63,10 +63,18 @@ public class CPU {
      * Start processing new data
      * <p>
      * @return The current {@link DataBatch} being processed
-     * @PRE: getData() != null;
-     * @INV getTicksLeftForBatch() >= 0;
+     * @POST: isDataInProcessing(data) == true
+     * @POST: if (@PRE(getData() == null):
+     *          getData() == data
+     * @POST: if (@PRE(getData()) == null):
+     *          if (data.getType() == Tabular:
+     *              getTicksLeftForBatch() == 32 / cores
+     *          if (data.getType() == Text:
+     *              getTicksLeftForBatch() == (32 / cores) * 2
+     *          if (data.getType() == Image:
+     *              getTicksLeftForBatch() == (32 / cores) * 4
      */
-    public void processData(DataBatch data) {
+    public void addDataForProcessing(DataBatch data) {
         this.data = data;
         ticks_left = (32 / cores);
         switch (this.data.getData().getType()) {
@@ -96,4 +104,11 @@ public class CPU {
      * @POST: @PRE(GetTotalCPUTime()) == getTotalCPUTime()
      */
     public int getTotalCPUTime() { return total_cpu_time; }
+
+    /**
+     * Check if the {@link DataBatch} {@code batch} is in the CPU's processing queue
+     * <p>
+     * @return [boolean] True if the batch is in the processing queue
+     */
+    public boolean isDataInProcessing(DataBatch batch) { return data == batch; }
 }
