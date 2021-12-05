@@ -9,9 +9,11 @@ import java.util.LinkedList;
  */
 public class MessageBusImpl implements MessageBus {
 
+	private LinkedList<MicroService> registered_ms;
+
 	public static MessageBusImpl getInstance() {
 		// TODO
-		return null;
+		return new MessageBusImpl();
 	}
 
 	@Override
@@ -55,7 +57,7 @@ public class MessageBusImpl implements MessageBus {
 
 	@Override
 	public LinkedList<MicroService> getRegisteredServices() {
-		return null;
+		return registered_ms;
 	}
 
 
@@ -73,7 +75,7 @@ public class MessageBusImpl implements MessageBus {
 	@Override
 	public void register(MicroService m) {
 		// TODO Auto-generated method stub
-
+		registered_ms.add(m);
 	}
 
 	@Override
@@ -84,7 +86,7 @@ public class MessageBusImpl implements MessageBus {
 	@Override
 	public void unregister(MicroService m) {
 		// TODO Auto-generated method stub
-
+		registered_ms.remove(m);
 	}
 
 	@Override

@@ -20,7 +20,11 @@ public interface MessageBus {
      * @param <T>  The type of the result expected by the completed event.
      * @param type The type to subscribe to,
      * @param m    The subscribing micro-service.
-     * @POST: isSubscribedToMessage(type, m) == true;
+     * @POST: if(isRegistered(m))
+     *          isSubscribedToMessage(type, m) == true;
+     * @POST: if(!isRegistered(m))
+     *          isSubscribedToMessage(type, m) == false;
+     *
      */
     <T> void subscribeEvent(Class<? extends Event<T>> type, MicroService m);
 
@@ -37,7 +41,10 @@ public interface MessageBus {
      * <p>
      * @param type 	The type to subscribe to.
      * @param m    	The subscribing micro-service.
-     * @POST: isSubscribedToMessage(type, m) == true;
+     * @POST: if(isRegistered(m))
+     *          isSubscribedToMessage(type, m) == true;
+     * @POST: if(!isRegistered(m))
+     *          isSubscribedToMessage(type, m) == false;
      */
     void subscribeBroadcast(Class<? extends Broadcast> type, MicroService m);
 
@@ -168,6 +175,6 @@ public interface MessageBus {
      * @PRE: isRegistered(m) == true
      * @POST: awaitMessage(m) != @PRE(awaitMessage(m))
      */
-    Message awaitMessage(MicroService m) throws InterruptedException;
+    Message awaitMessage(MicroService m) throws InterruptedException,IllegalStateException;
     
 }
