@@ -67,6 +67,7 @@ public class MessageBusTest {
         DummyEventType1 e1 = new DummyEventType1();
         String result = "result";
         mb.register(m1);
+        mb.sendEvent(e1);
         assertNotNull("There is no Future object for this event", mb.getEventFuture(e1));
         assertFalse("Future shouldn't be resolved before the completion his corresponding event" , mb.getEventFuture(e1).isDone());
         mb.complete(e1,result);
