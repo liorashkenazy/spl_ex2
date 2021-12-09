@@ -10,11 +10,18 @@ import java.util.concurrent.*;
  */
 public class MessageBusImpl implements MessageBus {
 
-	private LinkedList<MicroService> registered_ms;
 	private ConcurrentHashMap<Event, Future> event_to_result_map;
 	private ConcurrentHashMap<Class<? extends Event>, LinkedList<MicroService>> event_to_subscriber_map;
 	private ConcurrentHashMap<Class<? extends Broadcast>, ConcurrentLinkedQueue<MicroService>> broadcast_to_subcriber_map;
 	private ConcurrentHashMap<MicroService, LinkedBlockingQueue<Message>> registered_services;
+
+	private MessageBusImpl() {
+		event_to_result_map = new ConcurrentHashMap<Event, Future>();
+		event_to_subscriber_map = new ConcurrentHashMap<Class<? extends Event>, LinkedList<MicroService>>();
+		broadcast_to_subcriber_map = new ConcurrentHashMap<Class<? extends Broadcast>,
+															ConcurrentLinkedQueue<MicroService>>();
+		registered_services = new ConcurrentHashMap<MicroService, LinkedBlockingQueue<Message>>();
+	}
 
 	public static MessageBusImpl getInstance() {
 		// TODO
@@ -59,7 +66,7 @@ public class MessageBusImpl implements MessageBus {
 		if (!isSubscribedToMessage(type, m)) {
 			ConcurrentLinkedQueue<MicroService> current_list = broadcast_to_subcriber_map.get(type);
 			if (current_list == null) {
-				broadcast_to_subcriber_map.putIfAbsent(type, broadcast_to_subcriber_map.get(type));
+				broadcast_to_subcriber_map.putIfAbsent(type, new ConcurrentLinkedQueue<MicroService>());
 				current_list = broadcast_to_subcriber_map.get(type);
 			}
 			current_list.add(m);
@@ -107,6 +114,9 @@ public class MessageBusImpl implements MessageBus {
 		}
 		synchronized(event_to_subscriber_map.get(e.getClass())) {
 			LinkedList<MicroService> event_queue = event_to_subscriber_map.get(e.getClass());
+			if (event_queue.isEmpty()) {
+				return null;
+			}
 			Future<T> result = new Future<T>();
 			MicroService ms = event_queue.poll();
 			registered_services.get(ms).add(e);
