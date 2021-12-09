@@ -1,7 +1,6 @@
 package bgu.spl.mics;
 
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * A Future object represents a promised result - an object that will
@@ -15,8 +14,6 @@ public class Future<T> {
 
 	private T result;
 	private boolean isResolved;
-
-	AtomicReference<T> atomicResult;
 
 	/**
 	 * This should be the only public constructor in this class.
@@ -41,22 +38,14 @@ public class Future<T> {
      */
 	public T get() {
 		//TODO: implement this.
-		//option 1
-//		if (result != null) {
-//			return result;
-//		}
-//		synchronized (this) {
-//			try {
-//				wait();
-//			} catch (InterruptedException e) {}
-//		}
-//		return result;
-		// option 2
+		if (isResolved) {
+			return result;
+		}
 		synchronized (this) {
 			while (!isResolved) {
-					try {
-						wait();
-					} catch (InterruptedException m) {}
+				try {
+					wait();
+				} catch (InterruptedException m) {return null;}
 			}
 		}
 		return result;
@@ -72,14 +61,6 @@ public class Future<T> {
 		this.result = result;
 		isResolved = true;
 		notifyAll();
-
-
-//		T currResult = (T) this.atomicResult;
-//		while (! atomicResult.compareAndSet(currResult,result)) {
-//			currResult = this.result;
-//		}
-//		isResolved = true;
-//		notifyAll();
 	}
 	
 	/**
@@ -115,15 +96,6 @@ public class Future<T> {
 		if (isResolved) {
 			return result;
 		}
-//		Thread t1 = Thread.currentThread();
-//		Thread t2 = new Thread(() -> {
-//			try {
-//				Thread.sleep(TimeUnit.MILLISECONDS.convert(timeout,unit));
-//			} catch (InterruptedException m) {}
-//			t1.interrupted();
-//		} );
-//		t2.start();
-
 		synchronized (this) {
 			try {
 				wait(TimeUnit.MILLISECONDS.convert(timeout,unit));

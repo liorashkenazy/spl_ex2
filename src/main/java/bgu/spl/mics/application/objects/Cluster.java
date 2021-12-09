@@ -18,6 +18,7 @@ public class Cluster {
      * Retrieves the single instance of this class.
      */
 	public static Cluster getInstance() {
+		//TODO
 		if (instance == null) {
 			instance = new Cluster();
 		}

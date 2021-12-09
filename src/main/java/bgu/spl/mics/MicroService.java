@@ -61,8 +61,8 @@ public abstract class MicroService implements Runnable {
      */
     protected final <T, E extends Event<T>> void subscribeEvent(Class<E> type, Callback<E> callback) {
         //TODO: implement this.
-        messageBus.subscribeEvent(type,this);
         messageTypeToCallback.put(type,callback);
+        messageBus.subscribeEvent(type,this);
     }
 
     /**
@@ -87,9 +87,8 @@ public abstract class MicroService implements Runnable {
      */
     protected final <B extends Broadcast> void subscribeBroadcast(Class<B> type, Callback<B> callback) {
         //TODO: implement this.
-        messageBus.subscribeBroadcast(type,this);
         messageTypeToCallback.put(type,callback);
-
+        messageBus.subscribeBroadcast(type,this);
     }
 
     /**
@@ -171,10 +170,7 @@ public abstract class MicroService implements Runnable {
                 messageTypeToCallback.get(message).call(message);
 
             } catch (InterruptedException e){} catch (IllegalStateException e){}
-
-
         }
         messageBus.unregister(this);
     }
-
 }
