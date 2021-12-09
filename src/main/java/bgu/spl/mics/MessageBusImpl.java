@@ -30,9 +30,9 @@ public class MessageBusImpl implements MessageBus {
 
 	@Override
 	public <T> void subscribeEvent(Class<? extends Event<T>> type, MicroService m) {
-		if (!isSubscribedToMessage(type, m)) {
+		if (isRegistered(m) && !isSubscribedToMessage(type, m)) {
 			Queue<MicroService> event_queue = event_to_subscriber_map.get(type);
-			if (event_to_subscriber_map.get(type) == null) {
+			if (event_queue == null) {
 				event_to_subscriber_map.putIfAbsent(type, new LinkedList<MicroService>());
 				event_queue = event_to_subscriber_map.get(type);
 			}
@@ -63,7 +63,7 @@ public class MessageBusImpl implements MessageBus {
 
 	@Override
 	public void subscribeBroadcast(Class<? extends Broadcast> type, MicroService m) {
-		if (!isSubscribedToMessage(type, m)) {
+		if (isRegistered(m) && !isSubscribedToMessage(type, m)) {
 			ConcurrentLinkedQueue<MicroService> current_list = broadcast_to_subcriber_map.get(type);
 			if (current_list == null) {
 				broadcast_to_subcriber_map.putIfAbsent(type, new ConcurrentLinkedQueue<MicroService>());
@@ -78,8 +78,8 @@ public class MessageBusImpl implements MessageBus {
 		Future<T> res = event_to_result_map.get(e);
 		if (res != null) {
 			res.resolve(result);
+			event_to_result_map.remove(e);
 		}
-		event_to_result_map.remove(e);
 	}
 
 	@Override
@@ -109,11 +109,11 @@ public class MessageBusImpl implements MessageBus {
 
 	@Override
 	public <T> Future<T> sendEvent(Event<T> e) {
-		if (event_to_subscriber_map.get(e.getClass()) == null) {
+		LinkedList<MicroService> event_queue = event_to_subscriber_map.get(e.getClass());
+		if (event_queue == null) {
 			return null;
 		}
-		synchronized(event_to_subscriber_map.get(e.getClass())) {
-			LinkedList<MicroService> event_queue = event_to_subscriber_map.get(e.getClass());
+		synchronized(event_queue) {
 			if (event_queue.isEmpty()) {
 				return null;
 			}
@@ -141,7 +141,7 @@ public class MessageBusImpl implements MessageBus {
 
 	@Override
 	public boolean isRegistered(MicroService m) {
-		return registered_services.contains(m);
+		return registered_services.containsKey(m);
 	}
 
 	@Override
@@ -149,10 +149,10 @@ public class MessageBusImpl implements MessageBus {
 		for(ConcurrentLinkedQueue<MicroService> subscribers : broadcast_to_subcriber_map.values()) {
 			subscribers.remove(m);
 		}
-		for (LinkedList<MicroService> subscribers : event_to_subscriber_map.values()) {
-			synchronized(subscribers) {
-				if (subscribers.contains(m)) {
-					subscribers.remove(m);
+		for (LinkedList<MicroService> event_queue : event_to_subscriber_map.values()) {
+			synchronized(event_queue) {
+				if (event_queue.contains(m)) {
+					event_queue.remove(m);
 				}
 			}
 		}
@@ -165,6 +165,6 @@ public class MessageBusImpl implements MessageBus {
 		if (message_queue == null) {
 			throw new IllegalStateException();
 		}
-		return message_queue.poll();
+		return message_queue.take();
 	}
 }
