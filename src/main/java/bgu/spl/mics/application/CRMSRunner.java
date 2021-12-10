@@ -5,7 +5,10 @@ package bgu.spl.mics.application;
  * In the end, you should output a text file.
  */
 public class CRMSRunner {
+    enum Lior {la, ashkenal, lir };
+
     public static void main(String[] args) {
-        System.out.println("Hello World!");
+        System.out.println("Hello");
+
     }
 }
