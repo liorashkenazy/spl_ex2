@@ -24,8 +24,7 @@ public class MessageBusImpl implements MessageBus {
 	}
 
 	public static MessageBusImpl getInstance() {
-		// TODO
-		return new MessageBusImpl();
+		return SingeltonHolder.instance;
 	}
 
 	@Override
@@ -166,5 +165,9 @@ public class MessageBusImpl implements MessageBus {
 			throw new IllegalStateException();
 		}
 		return message_queue.take();
+	}
+
+	private static class SingeltonHolder {
+		private static MessageBusImpl instance = new MessageBusImpl();
 	}
 }
