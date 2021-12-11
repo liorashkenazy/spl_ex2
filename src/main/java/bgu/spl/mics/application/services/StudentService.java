@@ -1,6 +1,11 @@
 package bgu.spl.mics.application.services;
 
 import bgu.spl.mics.MicroService;
+import bgu.spl.mics.Callback;
+import bgu.spl.mics.Future;
+import bgu.spl.mics.application.messages.*;
+import bgu.spl.mics.application.objects.Student;
+import bgu.spl.mics.application.objects.Model;
 
 /**
  * Student is responsible for sending the {@link TrainModelEvent},
@@ -12,14 +17,40 @@ import bgu.spl.mics.MicroService;
  * You MAY change constructor signatures and even add new public constructors.
  */
 public class StudentService extends MicroService {
-    public StudentService(String name) {
-        super("Change_This_Name");
-        // TODO Implement this
+
+    private Student student;
+
+    public StudentService(String name, String student_name, String department, Student.Degree degree, Model[] models) {
+        super(name);
+        student = new Student(student_name, department, degree, models);
+    }
+
+    private class TrainModelCompleteBroadcastCallback implements Callback<TrainModelFinished> {
+        public void call(TrainModelFinished event) {
+            if (event.getModel().getStudent() == student) {
+                student.modelFinished(event.getModel());
+                Future<Boolean> res = sendEvent(new TestModelEvent(event.getModel()));
+                if (res.get()) {
+                    // TODO send publish result event
+                }
+                if (student.getCurrentModel() != null) {
+                    sendEvent(new TrainModelEvent(student.getCurrentModel()));
+                }
+            }
+        }
+    }
+
+    // TODO: implement according to Lior's class
+    private class PublishConferenceBroadcastCallback {
+        public void call() {
+            // TODO: Retrieve actual models from the event
+            student.readPapers(null);
+        }
     }
 
     @Override
     protected void initialize() {
-        // TODO Implement this
-
+        subscribeBroadcast(TrainModelFinished.class, new TrainModelCompleteBroadcastCallback());
+        // TODO subscribe to PublishConferenceBroadcast
     }
 }

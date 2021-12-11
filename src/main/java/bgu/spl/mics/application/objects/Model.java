@@ -28,4 +28,8 @@ public class Model {
     public Data getData() { return data; }
 
     public Status getStatus() { return status; }
+
+    public Result getResult() { return result; }
+
+    public Student getStudent() { return student; }
 }
