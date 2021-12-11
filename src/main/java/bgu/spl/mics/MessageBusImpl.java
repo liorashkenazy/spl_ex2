@@ -24,13 +24,13 @@ public class MessageBusImpl implements MessageBus {
 	}
 
 	public static MessageBusImpl getInstance() {
-		return SingeltonHolder.instance;
+		return SingletonHolder.instance;
 	}
 
 	@Override
 	public <T> void subscribeEvent(Class<? extends Event<T>> type, MicroService m) {
 		if (isRegistered(m) && !isSubscribedToMessage(type, m)) {
-			Queue<MicroService> event_queue = event_to_subscriber_map.get(type);
+			LinkedList<MicroService> event_queue = event_to_subscriber_map.get(type);
 			if (event_queue == null) {
 				event_to_subscriber_map.putIfAbsent(type, new LinkedList<MicroService>());
 				event_queue = event_to_subscriber_map.get(type);
@@ -50,7 +50,7 @@ public class MessageBusImpl implements MessageBus {
 			return broadcast_to_subcriber_map.get(type).contains(m);
 		}
 		else {
-			Queue<MicroService> event_queue = event_to_subscriber_map.get(type);
+			LinkedList<MicroService> event_queue = event_to_subscriber_map.get(type);
 			if (event_queue == null) {
 				return false;
 			}
@@ -167,7 +167,7 @@ public class MessageBusImpl implements MessageBus {
 		return message_queue.take();
 	}
 
-	private static class SingeltonHolder {
+	private static class SingletonHolder {
 		private static MessageBusImpl instance = new MessageBusImpl();
 	}
 }
