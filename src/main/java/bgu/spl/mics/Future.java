@@ -13,6 +13,7 @@ import java.util.concurrent.TimeUnit;
 public class Future<T> {
 
 	private T result = null;
+	private boolean isResolved = false;
 
 	/**
 	 * This should be the only public constructor in this class.
@@ -33,9 +34,12 @@ public class Future<T> {
 	 * @POST: if(@PRE get(0,SECONDS) != null)
 	 * 			@PRE get(0,SECONDS) == @POST get(0,SECONDS)
      */
-	public T get() {
-		//TODO: implement this.
-		return null;
+	public synchronized T get() {
+		if (!isResolved)
+		try {
+			wait();
+		}catch (InterruptedException e) {}
+		return result;
 	}
 	
 	/**
@@ -43,9 +47,12 @@ public class Future<T> {
 	 * @POST: get(0,SECONDS) == result
 	 * @POST: isDone() == true
      */
-	public void resolve (T result) {
-		//TODO: implement this.
-		this.result = result;
+	public synchronized void resolve (T result) {
+		if(!isResolved) {
+			this.result = result;
+			isResolved = true;
+			notifyAll();
+		}
 	}
 	
 	/**
@@ -56,8 +63,7 @@ public class Future<T> {
 	 *  	     isDone() == false
      */
 	public boolean isDone() {
-		//TODO: implement this.
-		return result != null;
+		return isResolved;
 	}
 	
 	/**
@@ -75,9 +81,14 @@ public class Future<T> {
 	 * @POST: if (!isDone())
 	 * 			get(timeout, unit) == null
      */
-	public T get(long timeout, TimeUnit unit) {
-		//TODO: implement this.
-		return null;
+	public synchronized T get(long timeout, TimeUnit unit) {
+		if (isResolved) {
+			return result;
+		}
+		try {
+			wait(TimeUnit.MILLISECONDS.convert(timeout, unit));
+		} catch (InterruptedException e) {
+		}
+		return result;
 	}
-
 }
