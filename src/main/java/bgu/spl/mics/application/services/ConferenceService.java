@@ -5,9 +5,7 @@ import bgu.spl.mics.MicroService;
 import bgu.spl.mics.application.messages.PublishConferenceBroadcast;
 import bgu.spl.mics.application.messages.PublishResultsEvent;
 import bgu.spl.mics.application.messages.TickBroadcast;
-import bgu.spl.mics.application.objects.Cluster;
 import bgu.spl.mics.application.objects.ConferenceInformation;
-import bgu.spl.mics.application.objects.DataBatch;
 
 /**
  * Conference service is in charge of
@@ -70,10 +68,11 @@ public class ConferenceService extends MicroService {
          * <p>
          * @param tickBroadcast the message that was taken from the message queue.
          * @POST: @PRE(conference.getTicksLeft()) - 1 == conference.getTicksLeft()
-         * @POST: if (getTicksLeft() == 0):
-         *          foreach (ms : getSubscribedServices(PublishConferenceBroadcast.getClass()))
-         *                awaitMessage(ms) == b;
-         * @POST: MessageBusImp.getInstance.isRegistered == false;
+         * @POST: if (conference.getTicksLeft() == 0):
+         *          foreach(ms : MessageBusImp.getInstance.getSubscribedServices(PublishConferenceBroadcast.getClass()))
+         *                MessageBusImp.getInstance.awaitMessage(ms) == b;
+         * @POST: if (conference.getTicksLeft() == 0):
+         *          MessageBusImp.getInstance.isRegistered == false;
          */
         public void call(TickBroadcast tickBroadcast) {
             conference.tick();

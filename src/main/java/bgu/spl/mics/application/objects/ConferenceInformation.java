@@ -1,9 +1,6 @@
 package bgu.spl.mics.application.objects;
 
-import bgu.spl.mics.Event;
 import bgu.spl.mics.application.messages.PublishConferenceBroadcast;
-
-import java.util.HashMap;
 import java.util.LinkedList;
 
 /**
@@ -14,7 +11,7 @@ public class ConferenceInformation {
 
     private String name;
     private int date;
-    private HashMap<Student,LinkedList<String>> student_to_models_name;
+    private LinkedList<Model> models_to_publish;
     private int ticks_left;
 
     /**
@@ -25,7 +22,7 @@ public class ConferenceInformation {
     public ConferenceInformation(String name, int date) {
         this.name = name;
         this.date = date;
-        this.student_to_models_name = new HashMap<>();
+        this.models_to_publish = new LinkedList<>();
         ticks_left = date;
     }
 
@@ -35,20 +32,14 @@ public class ConferenceInformation {
      * @param model The model to aggregate.
      * @PRE: {@code model} != null
      * @POST: if (model.isResultGood())
-     *          student_to_models_name.get(model.getStudent()) != null;
-     * @POST: if (model.isResultGood())
-     *          student_to_models_name.get(model.getStudent()).contains(model.getName()) == true;
+     *          models_to_publish.contains(model)
      * @POST: if(!model.isResultGood())
-     *          student_to_models_name.containsValue(model) == false;
+     *          models_to_publish.contains(model) == false;
      *
      */
-    public void addModelToConference (Model model) {
+    public void addModelToConference(Model model) {
         if (model.isResultGood()) {
-            Student student = model.getStudent();
-            if (student_to_models_name.get(student) == null) {
-                student_to_models_name.put(student,new LinkedList<String>());
-            }
-            student_to_models_name.get(student).add(model.getName());
+            models_to_publish.add(model);
         }
     }
 
@@ -69,16 +60,16 @@ public class ConferenceInformation {
      * @INV getTicksLeft() >= 0;
      * @POST: @PRE(getTickLeft()) == getTickLeft()
      */
-    public int getTicksLeft () {
+    public int getTicksLeft() {
         return ticks_left;
     }
 
     /**
      * <p>
-     * @return [HashMap] hashmap that maps between {@link Student} to theirs {@link Model}s name
-     * of successful {@link Model}s that will be published via {@link PublishConferenceBroadcast}
+     * @return [LikedList] linked list that contains successful {@link Model}s
+     * that will be published via {@link PublishConferenceBroadcast}
      */
-    public HashMap<Student,LinkedList<String>> getModels () {
-        return student_to_models_name;
+    public LinkedList<Model> getModels() {
+        return models_to_publish;
     }
 }
