@@ -3,6 +3,7 @@ package bgu.spl.mics.application.services;
 import java.lang.Thread;
 import bgu.spl.mics.Callback;
 import bgu.spl.mics.MicroService;
+import bgu.spl.mics.application.messages.TerminateBroadcast;
 import bgu.spl.mics.application.messages.TickBroadcast;
 
 /**
@@ -17,20 +18,28 @@ import bgu.spl.mics.application.messages.TickBroadcast;
 public class TimeService extends MicroService{
 
 	int tick_time;
+	int duration;
 
-	public TimeService(int tick_time) {
+	public TimeService(int tick_time, int duration) {
 		super("TimeService");
 		this.tick_time = tick_time;
+		this.duration = duration;
 	}
 
 	private class TickBroadcastCallback implements Callback<TickBroadcast> {
 
 		public void call(TickBroadcast event) {
-			try {
-				Thread.sleep(tick_time);
-			} catch (InterruptedException ignored) {
+			duration --;
+			if (duration == 0) {
+				sendBroadcast(new TerminateBroadcast());
+				terminate();
 			}
-			sendBroadcast(new TickBroadcast());
+			else {
+				try {
+					Thread.sleep(tick_time);
+				} catch (InterruptedException ignored) {}
+				sendBroadcast(new TickBroadcast());
+			}
 		}
 	}
 
