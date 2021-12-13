@@ -11,10 +11,11 @@ public class Student {
     enum Degree {
         MSc, PhD
     }
-
-    private int name;
+    // TODO: name was int type
+    private String name;
     private String department;
     private Degree status;
+    private Model[] modelsArray;
     private int publications;
     private int papersRead;
 
