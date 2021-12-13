@@ -50,5 +50,6 @@ public class StudentService extends MicroService {
     protected void initialize() {
         subscribeBroadcast(TrainModelFinished.class, new TrainModelCompleteCallback());
         subscribeBroadcast(PublishConferenceBroadcast.class, new PublishConferenceCallback());
+        subscribeBroadcast(TerminateBroadcast.class, new TerminateCallback());
     }
 }
