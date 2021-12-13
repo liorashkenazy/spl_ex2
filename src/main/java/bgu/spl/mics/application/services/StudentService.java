@@ -25,7 +25,7 @@ public class StudentService extends MicroService {
         student = new Student(student_name, department, degree, models);
     }
 
-    private class TrainModelCompleteBroadcastCallback implements Callback<TrainModelFinished> {
+    private class TrainModelCompleteCallback implements Callback<TrainModelFinished> {
         public void call(TrainModelFinished event) {
             if (event.getModel().getStudent() == student) {
                 student.modelFinished(event.getModel());
@@ -40,7 +40,7 @@ public class StudentService extends MicroService {
         }
     }
 
-    private class PublishConferenceBroadcastCallback implements Callback<PublishConferenceBroadcast>{
+    private class PublishConferenceCallback implements Callback<PublishConferenceBroadcast>{
         public void call(PublishConferenceBroadcast published) {
             student.readPapers(published.getModels());
         }
@@ -48,7 +48,7 @@ public class StudentService extends MicroService {
 
     @Override
     protected void initialize() {
-        subscribeBroadcast(TrainModelFinished.class, new TrainModelCompleteBroadcastCallback());
-        subscribeBroadcast(PublishConferenceBroadcast.class, new PublishConferenceBroadcastCallback());
+        subscribeBroadcast(TrainModelFinished.class, new TrainModelCompleteCallback());
+        subscribeBroadcast(PublishConferenceBroadcast.class, new PublishConferenceCallback());
     }
 }
