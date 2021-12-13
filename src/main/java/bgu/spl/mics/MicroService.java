@@ -167,6 +167,9 @@ public abstract class MicroService implements Runnable {
         messageBus.unregister(this);
     }
 
+    /**
+     * An optional Callback to be used by derived classes. The callback terminates the MicroService
+     * */
     public class TerminateCallback implements Callback<TerminateBroadcast> {
 
         public void call(TerminateBroadcast terminateBroadcast) {
