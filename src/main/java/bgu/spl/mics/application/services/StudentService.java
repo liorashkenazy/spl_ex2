@@ -31,7 +31,7 @@ public class StudentService extends MicroService {
                 student.modelFinished(event.getModel());
                 Future<Boolean> res = sendEvent(new TestModelEvent(event.getModel()));
                 if (res.get()) {
-                    // TODO send publish result event
+                    sendEvent(new PublishResultsEvent(event.getModel()));
                 }
                 if (student.getCurrentModel() != null) {
                     sendEvent(new TrainModelEvent(student.getCurrentModel()));
@@ -40,17 +40,15 @@ public class StudentService extends MicroService {
         }
     }
 
-    // TODO: implement according to Lior's class
-    private class PublishConferenceBroadcastCallback {
-        public void call() {
-            // TODO: Retrieve actual models from the event
-            student.readPapers(null);
+    private class PublishConferenceBroadcastCallback implements Callback<PublishConferenceBroadcast>{
+        public void call(PublishConferenceBroadcast published) {
+            student.readPapers(published.getModels());
         }
     }
 
     @Override
     protected void initialize() {
         subscribeBroadcast(TrainModelFinished.class, new TrainModelCompleteBroadcastCallback());
-        // TODO subscribe to PublishConferenceBroadcast
+        subscribeBroadcast(PublishConferenceBroadcast.class, new PublishConferenceBroadcastCallback());
     }
 }
