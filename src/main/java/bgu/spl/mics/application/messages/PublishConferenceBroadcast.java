@@ -15,4 +15,6 @@ public class PublishConferenceBroadcast implements Broadcast {
     public PublishConferenceBroadcast(ConferenceInformation conference) {
         published_models = conference.getModels();
     }
+
+    public LinkedList<Model> getModels() { return published_models; }
 }
