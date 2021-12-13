@@ -34,11 +34,14 @@ public class Future<T> {
 	 * @POST: if(@PRE get(0,SECONDS) != null)
 	 * 			@PRE get(0,SECONDS) == @POST get(0,SECONDS)
      */
-	public synchronized T get() {
-		if (!isResolved)
-		try {
-			wait();
-		}catch (InterruptedException e) {}
+	public T get() {
+		if (!isResolved) {
+			synchronized (this) {
+				try {
+					wait();
+				} catch (InterruptedException e) {}
+			}
+		}
 		return result;
 	}
 	
@@ -81,13 +84,13 @@ public class Future<T> {
 	 * @POST: if (!isDone())
 	 * 			get(timeout, unit) == null
      */
-	public synchronized T get(long timeout, TimeUnit unit) {
-		if (isResolved) {
-			return result;
-		}
-		try {
-			wait(TimeUnit.MILLISECONDS.convert(timeout, unit));
-		} catch (InterruptedException e) {
+	public T get(long timeout, TimeUnit unit) {
+		if (!isResolved) {
+			synchronized (this) {
+				try {
+					wait(TimeUnit.MILLISECONDS.convert(timeout, unit));
+				} catch (InterruptedException e) {}
+			}
 		}
 		return result;
 	}

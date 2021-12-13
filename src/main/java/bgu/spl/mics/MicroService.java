@@ -24,7 +24,7 @@ public abstract class MicroService implements Runnable {
 
     private boolean terminated = false;
     private final String name;
-    private ConcurrentHashMap< Class<? extends Message>,Callback> message_to_callBack;
+    private ConcurrentHashMap< Class<? extends Message>,Callback> message_to_callback;
     private MessageBusImpl messageBus = MessageBusImpl.getInstance();
 
     /**
@@ -33,7 +33,7 @@ public abstract class MicroService implements Runnable {
      */
     public MicroService(String name) {
         this.name = name;
-        message_to_callBack = new ConcurrentHashMap<>();
+        message_to_callback = new ConcurrentHashMap<>();
     }
 
     /**
@@ -58,7 +58,7 @@ public abstract class MicroService implements Runnable {
      *                 queue.
      */
     protected final <T, E extends Event<T>> void subscribeEvent(Class<E> type, Callback<E> callback) {
-        message_to_callBack.put(type,callback);
+        message_to_callback.put(type,callback);
         messageBus.subscribeEvent(type,this);
     }
 
@@ -83,8 +83,9 @@ public abstract class MicroService implements Runnable {
      *                 queue.
      */
     protected final <B extends Broadcast> void subscribeBroadcast(Class<B> type, Callback<B> callback) {
-        message_to_callBack.put(type,callback);
-        messageBus.subscribeBroadcast(type,this);    }
+        message_to_callback.put(type,callback);
+        messageBus.subscribeBroadcast(type,this);
+    }
 
     /**
      * Sends the event {@code e} using the message-bus and receive a {@link Future<T>}
@@ -158,7 +159,7 @@ public abstract class MicroService implements Runnable {
         while (!terminated) {
             try {
                 Message message = messageBus.awaitMessage(this);
-                message_to_callBack.get(message.getClass()).call(message);
+                message_to_callback.get(message.getClass()).call(message);
             } catch (InterruptedException e){} catch (IllegalStateException e){}
         }
         messageBus.unregister(this);
