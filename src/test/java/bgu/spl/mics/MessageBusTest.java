@@ -4,13 +4,14 @@ import org.junit.Test;
 import static org.junit.Assert.*;
 import org.junit.BeforeClass;
 import org.junit.After;
+import bgu.spl.mics.MessageBus;
 import bgu.spl.mics.MessageBusImpl;
 import bgu.spl.mics.MicroService;
 import java.util.LinkedList;
 
 public class MessageBusTest {
 
-    static MessageBusImpl mb;
+    static MessageBus mb;
     static boolean check_await_blocking = false;
     Message returned_message = null;
 
@@ -67,11 +68,13 @@ public class MessageBusTest {
         DummyEventType1 e1 = new DummyEventType1();
         String result = "result";
         mb.register(m1);
-        assertNotNull("There is no Future object for this event", mb.getEventFuture(e1));
+        mb.subscribeEvent(e1.getClass(), m1);
+        Future<String> result_future = mb.sendEvent(e1);
+        assertEquals("Future not properly set for event", result_future, mb.getEventFuture(e1));
         assertFalse("Future shouldn't be resolved before the completion his corresponding event" , mb.getEventFuture(e1).isDone());
         mb.complete(e1,result);
-        assertTrue("Future isn't resolved after completion his corresponding event" , mb.getEventFuture(e1).isDone());
-        assertEquals("Incorrect Future result",mb.getEventFuture(e1).get(),result);
+        assertTrue("Future isn't resolved after completion his corresponding event" , result_future.isDone());
+        assertEquals("Incorrect Future result", result, result_future.get());
     }
 
     @Test
@@ -118,8 +121,8 @@ public class MessageBusTest {
         mb.subscribeEvent(e1.getClass(),m1);
         mb.subscribeEvent(e1.getClass(),m2);
         mb.subscribeEvent(e2.getClass(),m2);
-        assertNotNull("Should return Future object",mb.sendEvent(e1));
         assertEquals("First event should be sent to the first subscribed service",m1,mb.getNextServiceForEvent(e1.getClass()));
+        assertNotNull("Should return Future object",mb.sendEvent(e1));
         try {
             assertEquals("Event not successfully sent to Micro-service queue",e1,mb.awaitMessage(m1));
         } catch (InterruptedException e){}
@@ -127,10 +130,10 @@ public class MessageBusTest {
         try {
             assertNotEquals("Event should be sent only to one Micro-service",e1,mb.awaitMessage(m2));
         } catch (InterruptedException e){}
-        assertNotNull("Should return Future object",mb.sendEvent(e1));
         assertEquals("Second event should be sent to the second subscribed service",m2,mb.getNextServiceForEvent(e1.getClass()));
         assertNotNull("Should return Future object",mb.sendEvent(e1));
         assertEquals("Third event should be sent to the first subscribed service",m1,mb.getNextServiceForEvent(e1.getClass()));
+        assertNotNull("Should return Future object",mb.sendEvent(e1));
     }
 
     @Test
@@ -187,7 +190,11 @@ public class MessageBusTest {
         Thread t1 = new Thread(() -> {
             try {
                 returned_message = mb.awaitMessage(m1);
-            } catch (InterruptedException e){} catch (IllegalStateException e){}
+            } catch (InterruptedException e){
+                assertTrue("Exception thrown", true);
+            } catch (IllegalStateException e){
+                assertTrue("Exception thrown 2", true);
+            }
             check_await_blocking = true;
         } );
         t1.start();

@@ -19,13 +19,20 @@ public class Model {
     public Model(String name, Data data, Student student) {
         this.name = name;
         this.data = data;
+        this.student = student;
         this.status = Status.PreTrained;
         this.result = Result.None;
     }
 
     public void setStatus(Status status) { this.status = status; }
 
+    public String getName() { return name; }
+
     public Data getData() { return data; }
 
+    public Student getStudent() { return student; }
+
     public Status getStatus() { return status; }
+
+    public boolean isResultGood() { return result.equals(Result.Good); }
 }

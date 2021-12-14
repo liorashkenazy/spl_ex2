@@ -18,10 +18,10 @@ public class Cluster {
      * Retrieves the single instance of this class.
      */
 	public static Cluster getInstance() {
-		if (instance == null) {
-			instance = new Cluster();
-		}
-		return instance;
+		return SingeltonHolder.instance;
 	}
 
+	private static class SingeltonHolder {
+		private static Cluster instance = new Cluster();
+	}
 }
