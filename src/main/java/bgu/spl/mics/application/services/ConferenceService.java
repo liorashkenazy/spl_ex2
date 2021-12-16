@@ -20,6 +20,7 @@ import bgu.spl.mics.application.objects.ConferenceInformation;
 public class ConferenceService extends MicroService {
 
     private ConferenceInformation conference;
+    private boolean isInitialized = false;
 
     /**
      * <p>
