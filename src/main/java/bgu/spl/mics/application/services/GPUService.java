@@ -36,6 +36,7 @@ public class GPUService extends MicroService {
         subscribeEvent(TestModelEvent.class,new TestModelCallback());
         subscribeBroadcast(TickBroadcast.class,new TickCallback());
         subscribeBroadcast(TerminateBroadcast.class, new TerminateCallback());
+        sendBroadcast(new InitializeBroadcast());
     }
 
     private class TickCallback implements Callback<TickBroadcast> {

@@ -33,6 +33,7 @@ public class CPUService extends MicroService {
     protected void initialize() {
         subscribeBroadcast(TickBroadcast.class,new TickCallback());
         subscribeBroadcast(TerminateBroadcast.class, new TerminateCallback());
+        sendBroadcast(new InitializeBroadcast());
     }
 
     private class TickCallback implements Callback<TickBroadcast> {
