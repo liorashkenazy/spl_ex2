@@ -1,9 +1,6 @@
 package bgu.spl.mics.application;
 
-import bgu.spl.mics.application.objects.CPU;
-import bgu.spl.mics.application.objects.ConferenceInformation;
-import bgu.spl.mics.application.objects.GPU;
-import bgu.spl.mics.application.objects.Student;
+import bgu.spl.mics.application.objects.*;
 import bgu.spl.mics.application.services.*;
 import com.google.gson.*;
 import com.google.gson.JsonElement;
@@ -27,16 +24,17 @@ public class CRMSRunner {
     public static void main(String[] args) {
         parsingInput();
         for(int i=0; i<student_array.length; i++){
+            student_array[i].setStudentForModels();
             Thread student_thread = new Thread(new StudentService("StudentService"+i, student_array[i]));
             student_thread.start();
         }
         for(int i=0; i<gpus_array.length; i++){
-            //Thread gpu_thread = new Thread(new GPUService("GpuService"+i,gpus_array[i]));
-            //gpu_thread.start();
+            Thread gpu_thread = new Thread(new GPUService("GpuService"+i,gpus_array[i]));
+            gpu_thread.start();
         }
         for(int i=0; i<cpus_array.length; i++){
-            //Thread cpu_thread = new Thread(new CPUService("CpuService"+i,cpus_array[i]));
-            //cpu_thread.start();
+            Thread cpu_thread = new Thread(new CPUService("CpuService"+i,cpus_array[i]));
+            cpu_thread.start();
         }
         for(int i=0; i< conferences_array.length; i++){
             Thread conference_thread = new Thread(new ConferenceService("ConferenceService"+i,conferences_array[i]));

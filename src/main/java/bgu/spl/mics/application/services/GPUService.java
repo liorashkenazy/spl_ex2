@@ -60,7 +60,6 @@ public class GPUService extends MicroService {
             else {
                 waiting_trainModelEvent.add(trainModelEvent);
             }
-
         }
     }
 
@@ -77,7 +76,6 @@ public class GPUService extends MicroService {
 
     private class TrainModelFinishCallback implements Callback<Model> {
         public void call(Model trained_model) {
-            //TODO
             is_gpu_currently_training = false;
             sendBroadcast(new TrainModelFinished(trained_model));
             while(!waiting_testModelEvent.isEmpty()) {

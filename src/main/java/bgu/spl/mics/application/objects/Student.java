@@ -65,6 +65,12 @@ public class Student {
 
     public int getPublications() { return publications; }
 
+    public void setStudentForModels() {
+        for (Model model : models) {
+            model.setStudent(this);
+        }
+    }
+
     public String toString() {
         String to_string = "name: " + name + ", department: " + department + ", degree: " + status + ", models:\n[" ;
         for(int i=0; i<models.length; i++) {

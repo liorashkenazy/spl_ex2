@@ -35,6 +35,8 @@ public class Model {
 
     public void setStatus(Status status) { this.status = status; }
 
+    public void setStudent(Student student) { this.student = student; }
+
     public String getName() { return name; }
 
     public Data getData() { return data; }

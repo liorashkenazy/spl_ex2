@@ -23,7 +23,7 @@ public class GPUTest {
         setCBCalled(false);
         Model model = new Model("TestModel",
                                "Tabular", 2 * 1000);
-        gp.trainModel(model, () -> setCBCalled(true));
+        gp.trainModel(model, (model1) -> setCBCalled(true));
         gp.tick();
         assertEquals("GPU time increased while not really working", 0, gp.getTotalGPUTime());
         gp.batchProcessed(new DataBatch(model.getData(), 0));
