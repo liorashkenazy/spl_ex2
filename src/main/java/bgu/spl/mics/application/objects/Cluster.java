@@ -1,6 +1,5 @@
 package bgu.spl.mics.application.objects;
 
-
 import java.util.PriorityQueue;
 
 /**
@@ -14,18 +13,43 @@ public class Cluster {
 
 	static Cluster instance;
 
-	private PriorityQueue<GPU> data_send_queue;
+	private PriorityQueue<GPU> active_gpus_queue;
 
 	private Cluster() { }
 
+	public void trainModel(GPU gp) {
+		synchronized (active_gpus_queue) {
+			active_gpus_queue.add(gp);
+		}
+	}
+
+	public void dataBatchProcessed(DataBatch db) {
+		db.getGPU().batchProcessed(db);
+	}
+
+	public DataBatch getNextBatchToProcess(CPU cpu) {
+		DataBatch db = null;
+		synchronized (active_gpus_queue) {
+			GPU gpu = active_gpus_queue.poll();
+			if (gpu == null) {
+				return null;
+			}
+			db = gpu.sendNextBatchToProcess();
+			if (gpu.hasDataBatchToProcess()) {
+				active_gpus_queue.add(gpu);
+				gpu.addArrivalTime(cpu.getTickCountForDataType(db.getData().getType()));
+			}
+		}
+		return db;
+	}
 	/**
      * Retrieves the single instance of this class.
      */
 	public static Cluster getInstance() {
-		return SingeltonHolder.instance;
+		return SingletonHolder.instance;
 	}
 
-	private static class SingeltonHolder {
+	private static class SingletonHolder {
 		private static Cluster instance = new Cluster();
 	}
 }

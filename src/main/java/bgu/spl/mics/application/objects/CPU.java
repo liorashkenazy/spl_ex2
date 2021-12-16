@@ -12,20 +12,21 @@ public class CPU {
     private Cluster cluster;
     private int ticks_left;
     private int total_cpu_time;
+    private int base_process_ticks;
 
     /**
      * Constructs a CPU with the specified cluster and cores
      * <p>
      * @param cores   The number of cores this CPU has
-     * @param cluster The cluster this CPU belongs to
      */
-    public CPU(int cores, Cluster cluster)
+    public CPU(int cores)
     {
         this.cores = cores;
-        this.cluster = cluster;
         this.data = null;
         this.ticks_left = 0;
         this.total_cpu_time = 0;
+        this.cluster = Cluster.getInstance();
+        this.base_process_ticks = 32 / cores;
     }
 
     /**
@@ -42,11 +43,18 @@ public class CPU {
     public void tick() {
         if (data != null) {
             ticks_left--;
-            if (ticks_left == 0) {
-                // do something
-                data = null;
-            }
             total_cpu_time++;
+            if (ticks_left == 0) {
+                cluster.dataBatchProcessed(data);
+                this.data = null;
+            }
+        }
+
+        if (data == null) {
+            data = cluster.getNextBatchToProcess(this);
+            if (data != null) {
+                this.ticks_left = getTickCountForDataType(data.getData().getType());
+            }
         }
     }
 
@@ -58,36 +66,6 @@ public class CPU {
      * @INV getTicksLeftForBatch() >= 0;
      */
     public int getTicksLeftForBatch() { return ticks_left; }
-
-    /**
-     * Start processing new data
-     * <p>
-     * @return The current {@link DataBatch} being processed
-     * @POST: isDataInProcessing(data) == true
-     * @POST: if (@PRE(getData() == null):
-     *          getData() == data
-     * @POST: if (@PRE(getData()) == null):
-     *          if (data.getType() == Tabular:
-     *              getTicksLeftForBatch() == 32 / cores
-     *          if (data.getType() == Text:
-     *              getTicksLeftForBatch() == (32 / cores) * 2
-     *          if (data.getType() == Image:
-     *              getTicksLeftForBatch() == (32 / cores) * 4
-     */
-    public void addDataForProcessing(DataBatch data) {
-        this.data = data;
-        ticks_left = (32 / cores);
-        switch (this.data.getData().getType()) {
-            case Text:
-                ticks_left *= 2;
-                break;
-            case Images:
-                ticks_left *= 4;
-                break;
-            default:
-                break;
-        }
-    }
 
     /**
      * Return the current data that is being processed
@@ -111,4 +89,8 @@ public class CPU {
      * @return [boolean] True if the batch is in the processing queue
      */
     public boolean isDataInProcessing(DataBatch batch) { return data == batch; }
+
+    public int getTickCountForDataType(Data.Type type) {
+        return base_process_ticks * (type == Data.Type.Tabular ? 1 : type == Data.Type.Images ? 4 : 2);
+    }
 }

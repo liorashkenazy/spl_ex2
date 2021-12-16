@@ -27,7 +27,7 @@ public class GPUTest {
         gp.trainModel(model, () -> setCBCalled(true));
         gp.tick();
         assertEquals("GPU time increased while not really working", 0, gp.getTotalGPUTime());
-        gp.batchProcessed(new DataBatch(model.getData(), 0));
+        gp.batchProcessed(new DataBatch(model.getData(), 0, gp));
         assertEquals("Incorrect tick count after batch processed", 1, gp.getTotalGPUTime());
         assertEquals("Training queue should be size", 1, gp.getBatchTrainQueueLength());
 
@@ -37,7 +37,7 @@ public class GPUTest {
         assertEquals("Batch not removed from training queue", 0, gp.getBatchTrainQueueLength());
 
         // Now process the second batch out of 2
-        gp.batchProcessed(new DataBatch(model.getData(), 1000));
+        gp.batchProcessed(new DataBatch(model.getData(), 1000, gp));
         gp.tick();
         assertEquals("GPU tick count not updated", 2, gp.getTotalGPUTime());
         assertEquals("Model should be trained", Model.Status.Trained, gp.getModel().getStatus());
@@ -83,7 +83,7 @@ public class GPUTest {
         assertEquals("Batch training queue should be empty", 0, gp.getBatchTrainQueueLength());
         Model model = new Model("TestModel", new Data(Data.Type.Tabular, 32 * 1000), null);
         gp.trainModel(model, null);
-        DataBatch db = new DataBatch(model.getData(), 0);
+        DataBatch db = new DataBatch(model.getData(), 0, gp);
         gp.batchProcessed(db);
         assertEquals("Batch training queue size", 1, gp.getBatchTrainQueueLength());
     }

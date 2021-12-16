@@ -2,9 +2,6 @@ package bgu.spl.mics.application.objects;
 
 import bgu.spl.mics.Callback;
 
-import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Passive object representing a single GPU.
@@ -24,6 +21,7 @@ public class GPU implements Comparable<GPU> {
     private Cluster cluster;
     private int next_data_index_to_process;
     private int current_batch_ticks_left;
+    private int data_batches_left_to_train;
     private Runnable train_model_finished_cb;
     private Integer next_expected_idle_time;
 
@@ -70,13 +68,8 @@ public class GPU implements Comparable<GPU> {
             }
             current_batch_ticks_left--;
             if (current_batch_ticks_left == 0) {
-                if (getNextBatchToProcess() != null) {
-                    // TODO: Send the batch for processing
-                    next_data_index_to_process += 1000;
-                }
-                // TODO: Move to the next batch
-                // TODO: Revise this condition to make sure we don't have any more batches to train
-                else {
+                data_batches_left_to_train--;
+                if (data_batches_left_to_train == 0) {
                     train_model_finished_cb.run();
                 }
             }
@@ -109,6 +102,7 @@ public class GPU implements Comparable<GPU> {
         this.next_data_index_to_process = 0;
         model.setStatus(Model.Status.Training);
         this.train_model_finished_cb = train_model_finish_cb;
+        data_batches_left_to_train = model.getData().getSize() / 1000;
     }
 
     /**
@@ -119,8 +113,8 @@ public class GPU implements Comparable<GPU> {
      * @POST: @PRE(getNextBatch()) == getNextBatch();
      */
     public DataBatch getNextBatchToProcess() {
-        if (getModel() != null && next_data_index_to_process < getModel().getData().getSize()) {
-            return new DataBatch(getModel().getData(), next_data_index_to_process);
+        if (hasDataBatchToProcess()) {
+            return new DataBatch(getModel().getData(), next_data_index_to_process, this);
         }
         return null;
     }
@@ -131,6 +125,10 @@ public class GPU implements Comparable<GPU> {
             next_data_index_to_process += 1000;
         }
         return db;
+    }
+
+    public boolean hasDataBatchToProcess() {
+        return getModel() != null && next_data_index_to_process < getModel().getData().getSize();
     }
 
     /**
@@ -168,7 +166,7 @@ public class GPU implements Comparable<GPU> {
      * <p>
      * @return [int] The number of data batches in the queue
      */
-    public int getBatchTrainQueueLength() { return 0;}
+    public int getBatchTrainQueueLength() { return 0; }
 
     /**
      * Returns the number of ticks it takes to train a batch for this GPU
@@ -178,7 +176,7 @@ public class GPU implements Comparable<GPU> {
      */
     public int getTicksForBatch() { return 0; }
 
-    private void addArrivalTime(int time) {
+    public void addArrivalTime(int time) {
         synchronized (next_expected_idle_time) {
             if (time > next_expected_idle_time) {
                 next_expected_idle_time = time + getTicksForBatch();
@@ -191,6 +189,10 @@ public class GPU implements Comparable<GPU> {
 
     @Override
     public int compareTo(GPU gpu) {
+        if (next_expected_idle_time == gpu.next_expected_idle_time) {
+            // Sort of a SJF
+            return (data_batches_left_to_train * getTicksForBatch()) - (gpu.data_batches_left_to_train * gpu.getTicksForBatch());
+        }
         return next_expected_idle_time - gpu.next_expected_idle_time;
     }
 }
