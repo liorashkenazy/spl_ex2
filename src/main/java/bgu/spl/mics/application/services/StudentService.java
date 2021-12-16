@@ -46,10 +46,24 @@ public class StudentService extends MicroService {
         }
     }
 
+    /**
+     * The callback terminates the MicroService
+     * */
+    public class TerminateCallback implements Callback<TerminateBroadcast> {
+
+        public void call(TerminateBroadcast terminateBroadcast) {
+            terminate();
+        }
+    }
+
     @Override
     protected void initialize() {
         subscribeBroadcast(TrainModelFinished.class, new TrainModelCompleteCallback());
         subscribeBroadcast(PublishConferenceBroadcast.class, new PublishConferenceCallback());
         subscribeBroadcast(TerminateBroadcast.class, new TerminateCallback());
+        // Send TrainModelEvent only if student has model to train
+        if(student.getCurrentModel() != null) {
+            sendEvent(new TrainModelEvent(student.getCurrentModel()));
+        }
     }
 }

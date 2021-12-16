@@ -84,4 +84,14 @@ public class ConferenceService extends MicroService {
             }
         }
     }
+
+    /**
+     * The callback terminates the MicroService
+     * */
+    public class TerminateCallback implements Callback<TerminateBroadcast> {
+
+        public void call(TerminateBroadcast terminateBroadcast) {
+            terminate();
+        }
+    }
 }
