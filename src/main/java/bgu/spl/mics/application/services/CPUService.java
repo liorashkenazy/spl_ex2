@@ -2,6 +2,7 @@ package bgu.spl.mics.application.services;
 
 import bgu.spl.mics.Callback;
 import bgu.spl.mics.MicroService;
+import bgu.spl.mics.application.messages.InitializeBroadcast;
 import bgu.spl.mics.application.messages.TerminateBroadcast;
 import bgu.spl.mics.application.messages.TickBroadcast;
 import bgu.spl.mics.application.objects.CPU;
@@ -32,7 +33,7 @@ public class CPUService extends MicroService {
     @Override
     protected void initialize() {
         subscribeBroadcast(TickBroadcast.class,new TickCallback());
-        subscribeBroadcast(TerminateBroadcast.class, new TerminateCallback());
+        subscribeBroadcast(TerminateBroadcast.class, (terminateBroadcast) -> terminate());
         sendBroadcast(new InitializeBroadcast());
     }
 
@@ -44,16 +45,6 @@ public class CPUService extends MicroService {
          */
         public void call(TickBroadcast tickBroadcast) {
             cpu.tick();
-        }
-    }
-
-    /**
-     * The callback terminates the MicroService
-     * */
-    public class TerminateCallback implements Callback<TerminateBroadcast> {
-
-        public void call(TerminateBroadcast terminateBroadcast) {
-            terminate();
         }
     }
 }

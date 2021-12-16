@@ -12,7 +12,6 @@ import java.util.LinkedList;
 /**
  * GPU service is responsible for handling the
  * {@link TrainModelEvent} and {@link TestModelEvent},
-
  * This class may not hold references for objects which it is not responsible for.
  *
  * You can add private fields and public methods to this class.
@@ -35,7 +34,7 @@ public class GPUService extends MicroService {
         subscribeEvent(TrainModelEvent.class,new TrainModelCallback());
         subscribeEvent(TestModelEvent.class,new TestModelCallback());
         subscribeBroadcast(TickBroadcast.class,new TickCallback());
-        subscribeBroadcast(TerminateBroadcast.class, new TerminateCallback());
+        subscribeBroadcast(TerminateBroadcast.class, (terminateBroadcast) -> terminate());
         sendBroadcast(new InitializeBroadcast());
     }
 
@@ -84,16 +83,6 @@ public class GPUService extends MicroService {
                 gpu.trainModel(waiting_trainModelEvent.pop().getModel(), new TrainModelFinishCallback());
                 is_gpu_currently_training = true;
             }
-        }
-    }
-
-    /**
-     * The callback terminates the MicroService
-     * */
-    public class TerminateCallback implements Callback<TerminateBroadcast> {
-
-        public void call(TerminateBroadcast terminateBroadcast) {
-            terminate();
         }
     }
 }
