@@ -2,6 +2,8 @@ package bgu.spl.mics.application.objects;
 
 import bgu.spl.mics.Callback;
 
+import java.util.concurrent.atomic.AtomicInteger;
+
 
 /**
  * Passive object representing a single GPU.
@@ -24,6 +26,7 @@ public class GPU implements Comparable<GPU> {
     private int data_batches_left_to_train;
     private Runnable train_model_finished_cb;
     private Integer next_expected_idle_time;
+    private AtomicInteger vram_train_queue;
 
     public GPU(Type type, Cluster cluster) {
         this.type = type;
@@ -39,7 +42,18 @@ public class GPU implements Comparable<GPU> {
      * @PRE: getBatchTrainQueueLength() < getMaxProcessedBatches()
      * @POST: @PRE(getBatchTrainQueueLength()) + 1 == getBatchTrainQueueLength()
      */
-    public void batchProcessed(DataBatch batch) { }
+    public boolean batchProcessed(DataBatch batch) {
+        int total = vram_train_queue.getAndIncrement();
+        if (total > getMaxProcessedBatches()) {
+            vram_train_queue.decrementAndGet();
+            return false;
+        }
+        if (total == 1) {
+            // If this is the first batch, signal that we can start training
+            current_batch_ticks_left = getTicksForBatch();
+        }
+        return true;
+    }
 
     /**
      * Updates the data structure upon each tick, if the current tick resulted in the completion of a {@link DataBatch}
@@ -68,6 +82,10 @@ public class GPU implements Comparable<GPU> {
             }
             current_batch_ticks_left--;
             if (current_batch_ticks_left == 0) {
+                // Moving to the next batch to train
+                if (vram_train_queue.decrementAndGet() != 0) {
+                    current_batch_ticks_left = getTicksForBatch();
+                }
                 data_batches_left_to_train--;
                 if (data_batches_left_to_train == 0) {
                     train_model_finished_cb.run();
@@ -166,7 +184,7 @@ public class GPU implements Comparable<GPU> {
      * <p>
      * @return [int] The number of data batches in the queue
      */
-    public int getBatchTrainQueueLength() { return 0; }
+    public int getBatchTrainQueueLength() { return vram_train_queue.get(); }
 
     /**
      * Returns the number of ticks it takes to train a batch for this GPU

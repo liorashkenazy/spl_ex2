@@ -23,8 +23,8 @@ public class Cluster {
 		}
 	}
 
-	public void dataBatchProcessed(DataBatch db) {
-		db.getGPU().batchProcessed(db);
+	public boolean dataBatchProcessed(DataBatch db) {
+		return db.getGPU().batchProcessed(db);
 	}
 
 	public DataBatch getNextBatchToProcess(CPU cpu) {

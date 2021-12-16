@@ -13,6 +13,7 @@ public class CPU {
     private int ticks_left;
     private int total_cpu_time;
     private int base_process_ticks;
+    private boolean awaiting_send;
 
     /**
      * Constructs a CPU with the specified cluster and cores
@@ -27,6 +28,7 @@ public class CPU {
         this.total_cpu_time = 0;
         this.cluster = Cluster.getInstance();
         this.base_process_ticks = 32 / cores;
+        this.awaiting_send = false;
     }
 
     /**
@@ -41,12 +43,22 @@ public class CPU {
      *           @PRE(getTotalCPUTime()) + 1 == getTotalCPUTime()
      */
     public void tick() {
-        if (data != null) {
+        if (awaiting_send) {
+            if (cluster.dataBatchProcessed(data)) {
+                awaiting_send = false;
+                this.data = null;
+            }
+        }
+        else if (data != null) {
             ticks_left--;
             total_cpu_time++;
             if (ticks_left == 0) {
-                cluster.dataBatchProcessed(data);
-                this.data = null;
+                if (cluster.dataBatchProcessed(data)) {
+                    this.data = null;
+                }
+                else {
+                    awaiting_send = true;
+                }
             }
         }
 
