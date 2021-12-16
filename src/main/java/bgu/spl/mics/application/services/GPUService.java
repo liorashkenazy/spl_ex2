@@ -3,10 +3,7 @@ package bgu.spl.mics.application.services;
 import bgu.spl.mics.Callback;
 import bgu.spl.mics.Message;
 import bgu.spl.mics.MicroService;
-import bgu.spl.mics.application.messages.TestModelEvent;
-import bgu.spl.mics.application.messages.TickBroadcast;
-import bgu.spl.mics.application.messages.TrainModelEvent;
-import bgu.spl.mics.application.messages.TrainModelFinished;
+import bgu.spl.mics.application.messages.*;
 import bgu.spl.mics.application.objects.GPU;
 import bgu.spl.mics.application.objects.Model;
 
@@ -38,6 +35,7 @@ public class GPUService extends MicroService {
         subscribeEvent(TrainModelEvent.class,new TrainModelCallback());
         subscribeEvent(TestModelEvent.class,new TestModelCallback());
         subscribeBroadcast(TickBroadcast.class,new TickCallback());
+        subscribeBroadcast(TerminateBroadcast.class, new TerminateCallback());
     }
 
     private class TickCallback implements Callback<TickBroadcast> {
@@ -85,6 +83,16 @@ public class GPUService extends MicroService {
                 gpu.trainModel(waiting_trainModelEvent.pop().getModel(), new TrainModelFinishCallback());
                 is_gpu_currently_training = true;
             }
+        }
+    }
+
+    /**
+     * The callback terminates the MicroService
+     * */
+    public class TerminateCallback implements Callback<TerminateBroadcast> {
+
+        public void call(TerminateBroadcast terminateBroadcast) {
+            terminate();
         }
     }
 }
