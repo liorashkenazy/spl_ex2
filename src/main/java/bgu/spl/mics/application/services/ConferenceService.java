@@ -24,12 +24,11 @@ public class ConferenceService extends MicroService {
     /**
      * <p>
      * @param name the name of the conference service.
-     * @param conference_name the name of the conference related to this service.
-     * @param conference_date the time of the conference related to this service.
+     * @param conference the conference related to this service.
      */
-    public ConferenceService(String name, String conference_name, int conference_date) {
+    public ConferenceService(String name, ConferenceInformation conference) {
         super(name);
-        this.conference = new ConferenceInformation(conference_name,conference_date);
+        this.conference = conference;
     }
     /**
      * This method is called once when the event loop starts.

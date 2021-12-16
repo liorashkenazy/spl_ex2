@@ -20,9 +20,9 @@ public class StudentService extends MicroService {
 
     private Student student;
 
-    public StudentService(String name, String student_name, String department, String degree, Model[] models) {
+    public StudentService(String name, Student student) {
         super(name);
-        student = new Student(student_name, department, degree, models);
+        this.student = student;
     }
 
     private class TrainModelCompleteCallback implements Callback<TrainModelFinished> {

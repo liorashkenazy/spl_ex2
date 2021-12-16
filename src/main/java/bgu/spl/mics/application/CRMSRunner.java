@@ -4,6 +4,10 @@ import bgu.spl.mics.application.objects.CPU;
 import bgu.spl.mics.application.objects.ConferenceInformation;
 import bgu.spl.mics.application.objects.GPU;
 import bgu.spl.mics.application.objects.Student;
+import bgu.spl.mics.application.services.CPUService;
+import bgu.spl.mics.application.services.ConferenceService;
+import bgu.spl.mics.application.services.GPUService;
+import bgu.spl.mics.application.services.StudentService;
 import com.google.gson.*;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
@@ -16,8 +20,31 @@ import java.io.FileReader;
  * In the end, you should output a text file.
  */
 public class CRMSRunner {
+    private static Student[] student_array;
+    private static GPU[] gpus_array;
+    private static CPU[] cpus_array;
+    private static ConferenceInformation[] conferences_array;
+    public static int tick_time;
+    public static int duration;
+
     public static void main(String[] args) {
         parsingInput();
+        for(int i=0; i<student_array.length; i++){
+            Thread student_thread = new Thread(new StudentService("StudentService"+i, student_array[i]));
+            student_thread.start();
+        }
+        for(int i=0; i<gpus_array.length; i++){
+            //Thread gpu_thread = new Thread(new GPUService("GpuService"+i,gpus_array[i]));
+            //gpu_thread.start();
+        }
+        for(int i=0; i<cpus_array.length; i++){
+            //Thread cpu_thread = new Thread(new CPUService("CpuService"+i,cpus_array[i]));
+            //cpu_thread.start();
+        }
+        for(int i=0; i< conferences_array.length; i++){
+            Thread conference_thread = new Thread(new ConferenceService("ConferenceService"+i,conferences_array[i]));
+            conference_thread.start();
+        }
         System.out.println("Hello World!");
     }
 
@@ -30,11 +57,11 @@ public class CRMSRunner {
 
             // Extracting students array
             JsonArray student_json_array = fileObject.get("Students").getAsJsonArray();
-            Student[] student_array = gson.fromJson(student_json_array.toString(),Student[].class);
+            student_array = gson.fromJson(student_json_array.toString(),Student[].class);
 
             // Extracting GPU array
             JsonArray gpus_json_array = fileObject.get("GPUS").getAsJsonArray();
-            GPU[] gpus_array = new GPU[gpus_json_array.size()];
+            gpus_array = new GPU[gpus_json_array.size()];
             int i=0;
             for (JsonElement gpu : gpus_json_array) {
                 gpus_array[i] = new GPU(gpu.getAsString());
@@ -43,7 +70,7 @@ public class CRMSRunner {
 
             // Extracting CPU array
             JsonArray cpus_json_array = fileObject.get("CPUS").getAsJsonArray();
-            CPU[] cpus_array = new CPU[cpus_json_array.size()];
+            cpus_array = new CPU[cpus_json_array.size()];
             i = 0;
             for (JsonElement cpu : cpus_json_array) {
                 cpus_array[i] = new CPU(cpu.getAsInt());
@@ -52,13 +79,13 @@ public class CRMSRunner {
 
             // Extracting Conferences
             JsonArray conferences_json_array = fileObject.get("Conferences").getAsJsonArray();
-            ConferenceInformation[] conferences_array = gson.fromJson(conferences_json_array.toString(),ConferenceInformation[].class);
+            conferences_array = gson.fromJson(conferences_json_array.toString(),ConferenceInformation[].class);
 
             // Extracting Tick Time
-            int tick_time = fileObject.get("TickTime").getAsInt();
+            tick_time = fileObject.get("TickTime").getAsInt();
 
             // Extracting Duration
-            int duration = fileObject.get("Duration").getAsInt();
+            duration = fileObject.get("Duration").getAsInt();
 
         } catch (Exception e){System.out.println(e);}
     }
