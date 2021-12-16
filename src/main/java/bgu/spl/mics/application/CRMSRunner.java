@@ -4,10 +4,7 @@ import bgu.spl.mics.application.objects.CPU;
 import bgu.spl.mics.application.objects.ConferenceInformation;
 import bgu.spl.mics.application.objects.GPU;
 import bgu.spl.mics.application.objects.Student;
-import bgu.spl.mics.application.services.CPUService;
-import bgu.spl.mics.application.services.ConferenceService;
-import bgu.spl.mics.application.services.GPUService;
-import bgu.spl.mics.application.services.StudentService;
+import bgu.spl.mics.application.services.*;
 import com.google.gson.*;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
@@ -45,6 +42,8 @@ public class CRMSRunner {
             Thread conference_thread = new Thread(new ConferenceService("ConferenceService"+i,conferences_array[i]));
             conference_thread.start();
         }
+        Thread time_thread = new Thread(new TimeService(tick_time,duration));
+        time_thread.start();
         System.out.println("Hello World!");
     }
 
