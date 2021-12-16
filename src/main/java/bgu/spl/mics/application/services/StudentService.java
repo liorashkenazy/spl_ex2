@@ -28,7 +28,7 @@ public class StudentService extends MicroService {
     @Override
     protected void initialize() {
         subscribeBroadcast(TrainModelFinished.class, new TrainModelCompleteCallback());
-        subscribeBroadcast(PublishConferenceBroadcast.class, new PublishConferenceCallback());
+        subscribeBroadcast(PublishConferenceBroadcast.class, (published) -> student.readPapers(published.getModels()));
         subscribeBroadcast(TerminateBroadcast.class, (terminateBroadcast) -> terminate());
         // Send TrainModelEvent only if student has model to train
         if(student.getCurrentModel() != null) {
@@ -49,12 +49,6 @@ public class StudentService extends MicroService {
                     sendEvent(new TrainModelEvent(student.getCurrentModel()));
                 }
             }
-        }
-    }
-
-    private class PublishConferenceCallback implements Callback<PublishConferenceBroadcast>{
-        public void call(PublishConferenceBroadcast published) {
-            student.readPapers(published.getModels());
         }
     }
 }

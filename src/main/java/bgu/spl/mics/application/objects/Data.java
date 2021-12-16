@@ -17,15 +17,7 @@ public class Data {
     private int size;
 
     public Data(String type, int size) {
-        if(type.equals(Type.Images)) {
-            this.type = Type.Images;
-        }
-        else if(type.equals(Type.Text)) {
-            this.type = Type.Text;
-        }
-        else {
-            this.type = Type.Tabular;
-        }
+        this.type = Type.valueOf(type);
         this.size = size;
     }
 

@@ -32,19 +32,8 @@ public class CPUService extends MicroService {
      */
     @Override
     protected void initialize() {
-        subscribeBroadcast(TickBroadcast.class,new TickCallback());
+        subscribeBroadcast(TickBroadcast.class,(tickBroadcast) -> cpu.tick());
         subscribeBroadcast(TerminateBroadcast.class, (terminateBroadcast) -> terminate());
         sendBroadcast(new InitializeBroadcast());
-    }
-
-    private class TickCallback implements Callback<TickBroadcast> {
-        /**
-         * This function should be called every time a tick occurs.
-         * <p>
-         * @param tickBroadcast the message that was taken from the message queue.
-         */
-        public void call(TickBroadcast tickBroadcast) {
-            cpu.tick();
-        }
     }
 }

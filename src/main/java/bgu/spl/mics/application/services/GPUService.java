@@ -33,20 +33,9 @@ public class GPUService extends MicroService {
     protected void initialize() {
         subscribeEvent(TrainModelEvent.class,new TrainModelCallback());
         subscribeEvent(TestModelEvent.class,new TestModelCallback());
-        subscribeBroadcast(TickBroadcast.class,new TickCallback());
+        subscribeBroadcast(TickBroadcast.class,(tickBroadcast) -> gpu.tick());
         subscribeBroadcast(TerminateBroadcast.class, (terminateBroadcast) -> terminate());
         sendBroadcast(new InitializeBroadcast());
-    }
-
-    private class TickCallback implements Callback<TickBroadcast> {
-        /**
-         * This function should be called every time a tick occurs.
-         * <p>
-         * @param tickBroadcast the message that was taken from the message queue.
-         */
-        public void call(TickBroadcast tickBroadcast) {
-            gpu.tick();
-        }
     }
 
     private class TrainModelCallback implements Callback<TrainModelEvent> {
@@ -76,10 +65,10 @@ public class GPUService extends MicroService {
         public void call(Model trained_model) {
             is_gpu_currently_training = false;
             sendBroadcast(new TrainModelFinished(trained_model));
-            while(!waiting_testModelEvent.isEmpty()) {
+            while (!waiting_testModelEvent.isEmpty()) {
                 gpu.testModel(waiting_testModelEvent.poll().getModel());
             }
-            if(!waiting_trainModelEvent.isEmpty()) {
+            if (!waiting_trainModelEvent.isEmpty()) {
                 gpu.trainModel(waiting_trainModelEvent.pop().getModel(), new TrainModelFinishCallback());
                 is_gpu_currently_training = true;
             }

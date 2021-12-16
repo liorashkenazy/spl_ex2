@@ -27,6 +27,7 @@ public class ConferenceService extends MicroService {
         super(name);
         this.conference = conference;
     }
+
     /**
      * This method is called once when the event loop starts.
      * responsible to subscribe the service to {@link PublishResultsEvent} and to {@link TickBroadcast}.
@@ -35,24 +36,11 @@ public class ConferenceService extends MicroService {
      */
     @Override
     protected void initialize() {
-        subscribeEvent(PublishResultsEvent.class ,new PublishResultCallback());
+        subscribeEvent(PublishResultsEvent.class,(publishResultsEvent) ->
+                conference.addModelToConference(publishResultsEvent.getModel()));
         subscribeBroadcast(TickBroadcast.class,new TickCallback());
         subscribeBroadcast(TerminateBroadcast.class,(terminateBroadcast) -> terminate());
         sendBroadcast(new InitializeBroadcast());
-    }
-
-    /**
-     * This class defines the {@link Callback} that should be invoked when a message of class type
-     * {@link PublishResultsEvent} is taken from the message queue.
-     */
-    private class PublishResultCallback implements Callback<PublishResultsEvent> {
-        /**
-         * This function aggregate published models to hashmap of successful models via {@link ConferenceInformation}.
-         * @param publishResultsEvent the message that was taken from the message queue.
-         */
-        public void call(PublishResultsEvent publishResultsEvent) {
-            conference.addModelToConference(publishResultsEvent.getModel());
-        }
     }
 
     /**
