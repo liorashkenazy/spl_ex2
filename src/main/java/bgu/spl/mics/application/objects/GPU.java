@@ -2,14 +2,17 @@ package bgu.spl.mics.application.objects;
 
 import bgu.spl.mics.Callback;
 
+import java.util.Iterator;
 import java.util.LinkedList;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Passive object representing a single GPU.
  * Add all the fields described in the assignment as private fields.
  * Add fields and methods to this class as you see fit (including public methods and constructors).
  */
-public class GPU {
+public class GPU implements Comparable<GPU> {
+
     /**
      * Enum representing the type of the GPU.
      */
@@ -22,6 +25,7 @@ public class GPU {
     private int next_data_index_to_process;
     private int current_batch_ticks_left;
     private Runnable train_model_finished_cb;
+    private Integer next_expected_idle_time;
 
     public GPU(Type type, Cluster cluster) {
         this.type = type;
@@ -57,7 +61,13 @@ public class GPU {
      */
     public void tick()
     {
+        if (getModel() == null) {
+            return;
+        }
         if (current_batch_ticks_left != 0) {
+            synchronized (next_expected_idle_time) {
+                next_expected_idle_time--;
+            }
             current_batch_ticks_left--;
             if (current_batch_ticks_left == 0) {
                 if (getNextBatchToProcess() != null) {
@@ -99,13 +109,6 @@ public class GPU {
         this.next_data_index_to_process = 0;
         model.setStatus(Model.Status.Training);
         this.train_model_finished_cb = train_model_finish_cb;
-        for (int i = 0; i < getMaxProcessedBatches(); i++) {
-            DataBatch batch = getNextBatchToProcess();
-            if (batch != null) {
-                next_data_index_to_process += 1000;
-                // TODO: Send batch for actual processing
-            }
-        }
     }
 
     /**
@@ -120,6 +123,14 @@ public class GPU {
             return new DataBatch(getModel().getData(), next_data_index_to_process);
         }
         return null;
+    }
+
+    public DataBatch sendNextBatchToProcess() {
+        DataBatch db = getNextBatchToProcess();
+        if (db != null) {
+            next_data_index_to_process += 1000;
+        }
+        return db;
     }
 
     /**
@@ -165,5 +176,21 @@ public class GPU {
      * @return [int] The number of ticks
      * @INV getTicksForBatch() >= 0;
      */
-    public int getTicksForBatch() {return 0;}
+    public int getTicksForBatch() { return 0; }
+
+    private void addArrivalTime(int time) {
+        synchronized (next_expected_idle_time) {
+            if (time > next_expected_idle_time) {
+                next_expected_idle_time = time + getTicksForBatch();
+            }
+            else {
+                next_expected_idle_time += getTicksForBatch();
+            }
+        }
+    }
+
+    @Override
+    public int compareTo(GPU gpu) {
+        return next_expected_idle_time - gpu.next_expected_idle_time;
+    }
 }
