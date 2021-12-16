@@ -16,8 +16,16 @@ public class Data {
     private int processed;
     private int size;
 
-    public Data(Type type, int size) {
-        this.type = type;
+    public Data(String type, int size) {
+        if(type.equals(Type.Images)) {
+            this.type = Type.Images;
+        }
+        else if(type.equals(Type.Text)) {
+            this.type = Type.Text;
+        }
+        else {
+            this.type = Type.Tabular;
+        }
         this.size = size;
     }
 

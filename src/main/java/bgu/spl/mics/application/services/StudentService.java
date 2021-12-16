@@ -20,7 +20,7 @@ public class StudentService extends MicroService {
 
     private Student student;
 
-    public StudentService(String name, String student_name, String department, Student.Degree degree, Model[] models) {
+    public StudentService(String name, String student_name, String department, String degree, Model[] models) {
         super(name);
         student = new Student(student_name, department, degree, models);
     }

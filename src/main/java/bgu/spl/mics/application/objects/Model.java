@@ -16,13 +16,22 @@ public class Model {
     private Status status;
     private Result result;
 
-    public Model(String name, Data data, Student student) {
+    public Model(String name, String type, int size) {
         this.name = name;
-        this.data = data;
-        this.student = student;
+        this.data = new Data(type,size);
+        //TODO
+        this.student = null;
         this.status = Status.PreTrained;
         this.result = Result.None;
     }
+
+//    public Model(String name, Data data, Student student) {
+//        this.name = name;
+//        this.data = data;
+//        this.student = student;
+//        this.status = Status.PreTrained;
+//        this.result = Result.None;
+//    }
 
     public void setStatus(Status status) { this.status = status; }
 
@@ -35,4 +44,8 @@ public class Model {
     public Status getStatus() { return status; }
 
     public boolean isResultGood() { return result.equals(Result.Good); }
+
+    public String toString() {
+        return "name: " + name + ", student name: TODO " + ", status: " + status + ", result: " + result + "\n";
+    }
 }

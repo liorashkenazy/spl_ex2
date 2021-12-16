@@ -23,11 +23,11 @@ public class GPU {
     private int current_batch_ticks_left;
     private Runnable train_model_finished_cb;
 
-    public GPU(Type type, Cluster cluster) {
-        this.type = type;
+    public GPU(String type) {
+        this.type = Type.valueOf(type);
         this.total_gpu_time = 0;
         this.model = null;
-        this.cluster = cluster;
+        this.cluster = Cluster.getInstance();
         this.train_model_finished_cb = null;
     }
 
@@ -166,4 +166,8 @@ public class GPU {
      * @INV getTicksForBatch() >= 0;
      */
     public int getTicksForBatch() {return 0;}
+
+    public String toString() {
+        return "gpu type: " + type + "\n";
+    }
 }
