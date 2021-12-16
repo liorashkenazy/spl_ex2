@@ -38,6 +38,7 @@ public class Student {
 
     public Model[] getModels() { return models; }
 
+    //TODO: delete argument
     public void modelFinished(Model model) {
         current_model++;
     }

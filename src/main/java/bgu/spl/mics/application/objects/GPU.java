@@ -21,7 +21,7 @@ public class GPU {
     private Cluster cluster;
     private int next_data_index_to_process;
     private int current_batch_ticks_left;
-    private Runnable train_model_finished_cb;
+    private Callback<Model> train_model_finished_cb;
 
     public GPU(String type) {
         this.type = Type.valueOf(type);
@@ -67,7 +67,7 @@ public class GPU {
                 // TODO: Move to the next batch
                 // TODO: Revise this condition to make sure we don't have any more batches to train
                 else {
-                    train_model_finished_cb.run();
+                    train_model_finished_cb.call(model);
                 }
             }
             total_gpu_time++;
@@ -94,7 +94,7 @@ public class GPU {
      * @POST: model.getStatus() == Model.Status.Training
      * @POST: getNextBatchToProcess().getStartIndex() == 1000 * getMaxProcessedBatches()
      */
-    public void trainModel(Model model, Runnable train_model_finish_cb) {
+    public void trainModel(Model model, Callback<Model> train_model_finish_cb) {
         this.model = model;
         this.next_data_index_to_process = 0;
         model.setStatus(Model.Status.Training);
