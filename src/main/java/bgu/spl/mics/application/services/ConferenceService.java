@@ -2,10 +2,7 @@ package bgu.spl.mics.application.services;
 
 import bgu.spl.mics.Callback;
 import bgu.spl.mics.MicroService;
-import bgu.spl.mics.application.messages.PublishConferenceBroadcast;
-import bgu.spl.mics.application.messages.PublishResultsEvent;
-import bgu.spl.mics.application.messages.TerminateBroadcast;
-import bgu.spl.mics.application.messages.TickBroadcast;
+import bgu.spl.mics.application.messages.*;
 import bgu.spl.mics.application.objects.ConferenceInformation;
 
 /**
@@ -41,7 +38,8 @@ public class ConferenceService extends MicroService {
     protected void initialize() {
         subscribeEvent(PublishResultsEvent.class ,new PublishResultCallback());
         subscribeBroadcast(TickBroadcast.class,new TickCallback());
-        subscribeBroadcast(TerminateBroadcast.class,new TerminateCallback());
+        subscribeBroadcast(TerminateBroadcast.class,(terminateBroadcast) -> terminate());
+        sendBroadcast(new InitializeBroadcast());
     }
 
     /**
