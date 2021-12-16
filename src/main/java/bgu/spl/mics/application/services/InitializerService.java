@@ -56,7 +56,7 @@ public class InitializerService extends MicroService {
         }
     }
 
-    public class InitializeCallback implements Callback<InitializeBroadcast> {
+    private class InitializeCallback implements Callback<InitializeBroadcast> {
 
         public void call(InitializeBroadcast initializeBroadcast) {
             initialize_counter++;
@@ -64,7 +64,8 @@ public class InitializerService extends MicroService {
             if (initialize_counter == number_of_objects) {
                 for(int i=0; i<student_array.length; i++){
                 Thread student_thread = new Thread(new StudentService("StudentService"+i, student_array[i]));
-                student_thread.start();
+                    thread_list.add(student_thread);
+                    student_thread.start();
                 }
             }
             // If all the gpus, cpus, conference and student are initialized
@@ -75,7 +76,7 @@ public class InitializerService extends MicroService {
         }
     }
 
-    public class TerminateCallback implements Callback<TerminateBroadcast> {
+    private class TerminateCallback implements Callback<TerminateBroadcast> {
 
         public void call(TerminateBroadcast terminateBroadcast) {
             // Waiting for all the micro-service's thread to terminate

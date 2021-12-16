@@ -38,7 +38,7 @@ public class ConferenceService extends MicroService {
     protected void initialize() {
         subscribeEvent(PublishResultsEvent.class ,new PublishResultCallback());
         subscribeBroadcast(TickBroadcast.class,new TickCallback());
-        subscribeBroadcast(TerminateBroadcast.class,new TerminateCallback());
+        subscribeBroadcast(TerminateBroadcast.class,(terminateBroadcast) -> terminate());
         sendBroadcast(new InitializeBroadcast());
     }
 
@@ -80,16 +80,6 @@ public class ConferenceService extends MicroService {
                 sendBroadcast(new PublishConferenceBroadcast(conference));
                 terminate();
             }
-        }
-    }
-
-    /**
-     * The callback terminates the MicroService
-     * */
-    public class TerminateCallback implements Callback<TerminateBroadcast> {
-
-        public void call(TerminateBroadcast terminateBroadcast) {
-            terminate();
         }
     }
 }
