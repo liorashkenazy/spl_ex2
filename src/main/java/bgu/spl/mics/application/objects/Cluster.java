@@ -1,6 +1,8 @@
 package bgu.spl.mics.application.objects;
 
+import java.util.HashMap;
 import java.util.PriorityQueue;
+import java.util.concurrent.ConcurrentLinkedQueue;
 
 /**
  * Passive object representing the cluster.
@@ -14,8 +16,14 @@ public class Cluster {
 	static Cluster instance;
 
 	private PriorityQueue<GPU> active_gpus_queue;
+	private HashMap<GPU, ConcurrentLinkedQueue<DataBatch>> gpu_awaiting_batches;
 
-	private Cluster() { }
+	private Cluster(GPU[] gpus, CPU[] cpus) {
+		gpu_awaiting_batches = new HashMap<GPU, ConcurrentLinkedQueue<DataBatch>>();
+		for (GPU gp : gpus) {
+			gpu_awaiting_batches.put(gp, new ConcurrentLinkedQueue<DataBatch>());
+		}
+	}
 
 	public void trainModel(GPU gp) {
 		synchronized (active_gpus_queue) {
@@ -23,8 +31,17 @@ public class Cluster {
 		}
 	}
 
-	public boolean dataBatchProcessed(DataBatch db) {
-		return db.getGPU().batchProcessed(db);
+	public void trainBatchFinished(GPU gp) {
+		DataBatch db = gpu_awaiting_batches.get(gp).poll();
+		if (!gp.batchProcessed(db)) {
+			gpu_awaiting_batches.get(gp).add(db);
+		}
+	}
+
+	public void dataBatchProcessed(DataBatch db) {
+		if (!db.getGPU().batchProcessed(db)) {
+			gpu_awaiting_batches.get(db.getGPU()).add(db);
+		}
 	}
 
 	public DataBatch getNextBatchToProcess(CPU cpu) {

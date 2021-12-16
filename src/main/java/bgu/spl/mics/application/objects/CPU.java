@@ -13,7 +13,6 @@ public class CPU {
     private int ticks_left;
     private int total_cpu_time;
     private int base_process_ticks;
-    private boolean awaiting_send;
 
     /**
      * Constructs a CPU with the specified cluster and cores
@@ -28,12 +27,14 @@ public class CPU {
         this.total_cpu_time = 0;
         this.cluster = Cluster.getInstance();
         this.base_process_ticks = 32 / cores;
-        this.awaiting_send = false;
     }
 
     /**
      * This function should be called every time a tick occurs. Once enough ticks have passed to finish processing the
-     * {@link DataBatch}, this function will notify the {@link Cluster} that processing is complete.
+     * {@link DataBatch}, this function will notify the {@link Cluster} that processing is complete. If no data is being
+     * processed at the moment, request data to process from the Cluster. If the CPU is currently clogged,
+     * attempt to unclog it.
+     *
      * <p>
      * @PRE: getData() != null;
      * @POST: @PRE(getTicksLeftForBatch()) - 1 == getTicksLeftForBatch()
@@ -43,22 +44,12 @@ public class CPU {
      *           @PRE(getTotalCPUTime()) + 1 == getTotalCPUTime()
      */
     public void tick() {
-        if (awaiting_send) {
-            if (cluster.dataBatchProcessed(data)) {
-                awaiting_send = false;
-                this.data = null;
-            }
-        }
-        else if (data != null) {
+        if (data != null) {
             ticks_left--;
             total_cpu_time++;
             if (ticks_left == 0) {
-                if (cluster.dataBatchProcessed(data)) {
-                    this.data = null;
-                }
-                else {
-                    awaiting_send = true;
-                }
+                cluster.dataBatchProcessed(data);
+                this.data = null;
             }
         }
 
@@ -102,6 +93,11 @@ public class CPU {
      */
     public boolean isDataInProcessing(DataBatch batch) { return data == batch; }
 
+    /**
+     * Calculate the number of ticks required to process {@link DataBatch} of {@link Data.Type} {@code type}
+     * <p>
+     * @return [int] The number of ticks required for this processor to process the data
+     */
     public int getTickCountForDataType(Data.Type type) {
         return base_process_ticks * (type == Data.Type.Tabular ? 1 : type == Data.Type.Images ? 4 : 2);
     }

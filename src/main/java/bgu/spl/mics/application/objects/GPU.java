@@ -85,6 +85,7 @@ public class GPU implements Comparable<GPU> {
                 // Moving to the next batch to train
                 if (vram_train_queue.decrementAndGet() != 0) {
                     current_batch_ticks_left = getTicksForBatch();
+                    cluster.trainBatchFinished(this);
                 }
                 data_batches_left_to_train--;
                 if (data_batches_left_to_train == 0) {
