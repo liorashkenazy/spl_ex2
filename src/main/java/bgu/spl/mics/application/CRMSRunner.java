@@ -7,6 +7,7 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
 import java.io.File;
 import java.io.FileReader;
+import java.lang.reflect.Type;
 
 /** This is the Main class of Compute Resources Management System application. You should parse the input file,
  * create the different instances of the objects, and run the system.
@@ -15,9 +16,14 @@ import java.io.FileReader;
 public class CRMSRunner {
 
     public static void main(String[] args) {
-        ConfigInformation config_info = parseInput(args[1]);
+        long start_time = System.nanoTime();
+        ConfigInformation config_info = parseInput("example_input.json");
         InitializerService initializerService = new InitializerService(config_info);
         initializerService.run();
+        long end_time = System.nanoTime();
+        Cluster.getInstance().summarize();
+        System.out.println(Cluster.getInstance().getStats());
+        System.out.println((end_time - start_time)  / 1000000);
     }
 
     private static ConfigInformation parseInput(String file_path) {
@@ -25,7 +31,20 @@ public class CRMSRunner {
         try {
             JsonElement fileElement = JsonParser.parseReader(new FileReader(input_file));
             JsonObject fileObject = fileElement.getAsJsonObject();
-            Gson gson = new Gson();
+            GsonBuilder gson_builder = new GsonBuilder();
+            JsonDeserializer<Model> model_deserializer = new JsonDeserializer<Model>() {
+                @Override
+                public Model deserialize(JsonElement jsonElement, Type type, JsonDeserializationContext jsonDeserializationContext) throws JsonParseException {
+                    JsonObject obj = jsonElement.getAsJsonObject();
+
+                    return new Model(obj.get("name").getAsString(),
+                            obj.get("type").getAsString(),
+                            obj.get("size").getAsInt());
+                }
+            };
+            gson_builder.registerTypeAdapter(Model.class, model_deserializer);
+            Gson gson = gson_builder.create();
+
             // Extracting students array
             JsonArray student_json_array = fileObject.get("Students").getAsJsonArray();
             Student[] student_array = gson.fromJson(student_json_array.toString(),Student[].class);
