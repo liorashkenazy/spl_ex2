@@ -28,11 +28,11 @@ public class GPU implements Comparable<GPU> {
     private Integer next_expected_idle_time;
     private AtomicInteger vram_train_queue;
 
-    public GPU(Type type, Cluster cluster) {
-        this.type = type;
+    public GPU(String type) {
+        this.type = Type.valueOf(type);
         this.total_gpu_time = 0;
         this.model = null;
-        this.cluster = cluster;
+        this.cluster = Cluster.getInstance();
         this.train_model_finished_cb = null;
     }
 
@@ -213,5 +213,9 @@ public class GPU implements Comparable<GPU> {
             return (data_batches_left_to_train * getTicksForBatch()) - (gpu.data_batches_left_to_train * gpu.getTicksForBatch());
         }
         return next_expected_idle_time - gpu.next_expected_idle_time;
+    }
+
+    public String toString() {
+        return "gpu type: " + type + "\n";
     }
 }
