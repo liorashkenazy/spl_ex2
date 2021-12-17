@@ -19,9 +19,12 @@ public class Cluster {
 	private HashMap<GPU, ConcurrentLinkedQueue<DataBatch>> gpu_awaiting_batches;
 	private GPU[] gpus;
 	private CPU[] cpus;
+	private Statistics stats;
 
 	private Cluster() {
 		gpu_awaiting_batches = new HashMap<GPU, ConcurrentLinkedQueue<DataBatch>>();
+		active_gpus_queue = new PriorityQueue<GPU>();
+		stats = new Statistics();
 	}
 
 	public void setGPUs(GPU[] gpus) {
@@ -43,7 +46,7 @@ public class Cluster {
 
 	public void trainBatchFinished(GPU gp) {
 		DataBatch db = gpu_awaiting_batches.get(gp).poll();
-		if (!gp.batchProcessed(db)) {
+		if (db != null && !gp.batchProcessed(db)) {
 			gpu_awaiting_batches.get(gp).add(db);
 		}
 	}
@@ -52,6 +55,11 @@ public class Cluster {
 		if (!db.getGPU().batchProcessed(db)) {
 			gpu_awaiting_batches.get(db.getGPU()).add(db);
 		}
+		stats.dataBatchProcessed();
+	}
+
+	public void modelTrainFinished(Model m) {
+		stats.addModel(m.getName());
 	}
 
 	public DataBatch getNextBatchToProcess(CPU cpu) {
@@ -69,6 +77,20 @@ public class Cluster {
 		}
 		return db;
 	}
+
+	public void summarize() {
+		for (GPU gp : gpus) {
+			stats.addGPUTime(gp.getTotalGPUTime());
+		}
+		for (CPU cp: cpus) {
+			stats.addCPUTime(cp.getTotalCPUTime());
+		}
+	}
+
+	public Statistics getStats() {
+		return stats;
+	}
+
 	/**
      * Retrieves the single instance of this class.
      */
