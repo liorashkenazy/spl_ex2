@@ -20,9 +20,21 @@ public class StudentService extends MicroService {
 
     private Student student;
 
-    public StudentService(String name, String student_name, String department, Student.Degree degree, Model[] models) {
+    public StudentService(String name, Student student) {
         super(name);
-        student = new Student(student_name, department, degree, models);
+        this.student = student;
+    }
+
+    @Override
+    protected void initialize() {
+        subscribeBroadcast(TrainModelFinished.class, new TrainModelCompleteCallback());
+        subscribeBroadcast(PublishConferenceBroadcast.class, (published) -> student.readPapers(published.getModels()));
+        subscribeBroadcast(TerminateBroadcast.class, (terminateBroadcast) -> terminate());
+        // Send TrainModelEvent only if student has model to train
+        if(student.getCurrentModel() != null) {
+            sendEvent(new TrainModelEvent(student.getCurrentModel()));
+        }
+        sendBroadcast(new InitializeBroadcast());
     }
 
     private class TrainModelCompleteCallback implements Callback<TrainModelFinished> {
@@ -38,18 +50,5 @@ public class StudentService extends MicroService {
                 }
             }
         }
-    }
-
-    private class PublishConferenceCallback implements Callback<PublishConferenceBroadcast>{
-        public void call(PublishConferenceBroadcast published) {
-            student.readPapers(published.getModels());
-        }
-    }
-
-    @Override
-    protected void initialize() {
-        subscribeBroadcast(TrainModelFinished.class, new TrainModelCompleteCallback());
-        subscribeBroadcast(PublishConferenceBroadcast.class, new PublishConferenceCallback());
-        subscribeBroadcast(TerminateBroadcast.class, new TerminateCallback());
     }
 }

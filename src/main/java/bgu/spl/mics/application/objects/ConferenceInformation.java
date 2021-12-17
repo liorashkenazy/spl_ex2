@@ -72,4 +72,8 @@ public class ConferenceInformation {
     public LinkedList<Model> getModels() {
         return models_to_publish;
     }
+
+    public String toString() {
+        return "conference name: " + name + " date: " + date + "\n";
+    }
 }

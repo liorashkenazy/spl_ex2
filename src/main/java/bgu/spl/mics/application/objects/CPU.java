@@ -71,6 +71,36 @@ public class CPU {
     public int getTicksLeftForBatch() { return ticks_left; }
 
     /**
+     * Start processing new data
+     * <p>
+     * @return The current {@link DataBatch} being processed
+     * @POST: isDataInProcessing(data) == true
+     * @POST: if (@PRE(getData() == null):
+     *          getData() == data
+     * @POST: if (@PRE(getData()) == null):
+     *          if (data.getType() == Tabular:
+     *              getTicksLeftForBatch() == 32 / cores
+     *          if (data.getType() == Text:
+     *              getTicksLeftForBatch() == (32 / cores) * 2
+     *          if (data.getType() == Image:
+     *              getTicksLeftForBatch() == (32 / cores) * 4
+     */
+    public void addDataForProcessing(DataBatch data) {
+        this.data = data;
+        ticks_left = (32 / cores);
+        switch (this.data.getData().getType()) {
+            case Text:
+                ticks_left *= 2;
+                break;
+            case Images:
+                ticks_left *= 4;
+                break;
+            default:
+                break;
+        }
+    }
+
+    /**
      * Return the current data that is being processed
      * <p>
      * @return The current {@link DataBatch} being processed
@@ -100,5 +130,9 @@ public class CPU {
      */
     public int getTickCountForDataType(Data.Type type) {
         return base_process_ticks * (type == Data.Type.Tabular ? 1 : type == Data.Type.Images ? 4 : 2);
+    }
+
+    public String toString() {
+        return "cores: " + cores + "\n";
     }
 }
