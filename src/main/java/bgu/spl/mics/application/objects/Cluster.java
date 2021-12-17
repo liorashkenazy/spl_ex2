@@ -17,12 +17,22 @@ public class Cluster {
 
 	private PriorityQueue<GPU> active_gpus_queue;
 	private HashMap<GPU, ConcurrentLinkedQueue<DataBatch>> gpu_awaiting_batches;
+	private GPU[] gpus;
+	private CPU[] cpus;
 
-	private Cluster(GPU[] gpus, CPU[] cpus) {
+	private Cluster() {
 		gpu_awaiting_batches = new HashMap<GPU, ConcurrentLinkedQueue<DataBatch>>();
+	}
+
+	public void setGPUs(GPU[] gpus) {
+		this.gpus = gpus;
 		for (GPU gp : gpus) {
 			gpu_awaiting_batches.put(gp, new ConcurrentLinkedQueue<DataBatch>());
 		}
+	}
+
+	public void setCPUs(CPU[] cpus) {
+		this.cpus = cpus;
 	}
 
 	public void trainModel(GPU gp) {
@@ -53,8 +63,8 @@ public class Cluster {
 			}
 			db = gpu.sendNextBatchToProcess();
 			if (gpu.hasDataBatchToProcess()) {
-				active_gpus_queue.add(gpu);
 				gpu.addArrivalTime(cpu.getTickCountForDataType(db.getData().getType()));
+				active_gpus_queue.add(gpu);
 			}
 		}
 		return db;
