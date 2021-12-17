@@ -19,7 +19,6 @@ public class Model {
     public Model(String name, String type, int size) {
         this.name = name;
         this.data = new Data(type,size);
-        //TODO
         this.student = null;
         this.status = Status.PreTrained;
         this.result = Result.None;
@@ -40,6 +39,6 @@ public class Model {
     public boolean isResultGood() { return result.equals(Result.Good); }
 
     public String toString() {
-        return "name: " + name + ", student name: TODO " + ", status: " + status + ", result: " + result + "\n";
+        return "name: " + name + ", student name: " + student.getName() + ", status: " + status + ", result: " + result + "\n";
     }
 }
