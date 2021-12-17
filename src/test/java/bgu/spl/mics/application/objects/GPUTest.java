@@ -15,16 +15,15 @@ public class GPUTest {
 
     @Test
     public void tick() {
-        GPU gp = new GPU(GPU.Type.RTX3090, cluster);
+        GPU gp = new GPU("RTX3090");
 
         assertEquals("Initial total GPU time incorrect", 0, gp.getTotalGPUTime());
         gp.tick();
         assertEquals("GPU time increased while not really working", 0, gp.getTotalGPUTime());
         setCBCalled(false);
         Model model = new Model("TestModel",
-                                new Data(Data.Type.Tabular, 2 * 1000),
-                                null);
-        gp.trainModel(model, () -> setCBCalled(true));
+                               "Tabular", 2 * 1000);
+        gp.trainModel(model, (model1) -> setCBCalled(true));
         gp.tick();
         assertEquals("GPU time increased while not really working", 0, gp.getTotalGPUTime());
         gp.batchProcessed(new DataBatch(model.getData(), 0));
@@ -47,9 +46,9 @@ public class GPUTest {
 
     @Test
     public void trainModel() {
-        GPU gp = new GPU(GPU.Type.RTX2080, cluster);
+        GPU gp = new GPU("RTX2080");
 
-        Model model = new Model("TestModel", new Data(Data.Type.Tabular, 32 * 1000), null);
+        Model model = new Model("TestModel", "Tabular", 32 * 1000);
         gp.trainModel(model, null);
         assertEquals("Model is not properly set", model, gp.getModel());
         assertEquals("Model status is not properly set", Model.Status.Training, gp.getModel().getStatus());
@@ -58,7 +57,7 @@ public class GPUTest {
                      gp.getNextBatchToProcess().getStartIndex());
 
         // Scenario 2: a Batch with short data
-        Model model2 = new Model("TestModel2", new Data(Data.Type.Tabular, 1000), null);
+        Model model2 = new Model("TestModel2", "Tabular", 1000);
         gp.trainModel(model, null);
         assertEquals("second model is not properly set", model, gp.getModel());
         assertEquals("second model status is not properly set", Model.Status.Training, gp.getModel().getStatus());
@@ -67,21 +66,21 @@ public class GPUTest {
 
     @Test
     public void getNextBatchToProcess() {
-        GPU gp = new GPU(GPU.Type.RTX2080, cluster);
+        GPU gp = new GPU("RTX2080");
 
         assertNull("Next data batch should be null", gp.getNextBatchToProcess());
-        Model model = new Model("TestModel", new Data(Data.Type.Tabular, 32 * 1000), null);
+        Model model = new Model("TestModel", "Tabular", 32 * 1000);
         gp.trainModel(model, null);
         assertNotNull("Next data batch should not be null", gp.getNextBatchToProcess());
     }
 
     @Test
     public void batchProcessed() {
-        GPU gp = new GPU(GPU.Type.RTX2080, cluster);
+        GPU gp = new GPU("RTX2080");
 
         // The queue should not change if there is no model in training atm
         assertEquals("Batch training queue should be empty", 0, gp.getBatchTrainQueueLength());
-        Model model = new Model("TestModel", new Data(Data.Type.Tabular, 32 * 1000), null);
+        Model model = new Model("TestModel", "Tabular", 32 * 1000);
         gp.trainModel(model, null);
         DataBatch db = new DataBatch(model.getData(), 0);
         gp.batchProcessed(db);

@@ -16,8 +16,8 @@ public class Data {
     private int processed;
     private int size;
 
-    public Data(Type type, int size) {
-        this.type = type;
+    public Data(String type, int size) {
+        this.type = Type.valueOf(type);
         this.size = size;
     }
 

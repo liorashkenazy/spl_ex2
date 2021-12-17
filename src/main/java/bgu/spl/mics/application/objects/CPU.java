@@ -17,12 +17,11 @@ public class CPU {
      * Constructs a CPU with the specified cluster and cores
      * <p>
      * @param cores   The number of cores this CPU has
-     * @param cluster The cluster this CPU belongs to
      */
-    public CPU(int cores, Cluster cluster)
+    public CPU(int cores)
     {
         this.cores = cores;
-        this.cluster = cluster;
+        this.cluster = Cluster.getInstance();
         this.data = null;
         this.ticks_left = 0;
         this.total_cpu_time = 0;
@@ -111,4 +110,8 @@ public class CPU {
      * @return [boolean] True if the batch is in the processing queue
      */
     public boolean isDataInProcessing(DataBatch batch) { return data == batch; }
+
+    public String toString() {
+        return "cores: " + cores + "\n";
+    }
 }

@@ -4,10 +4,7 @@ import bgu.spl.mics.Callback;
 import bgu.spl.mics.MicroService;
 import bgu.spl.mics.application.messages.InitializeBroadcast;
 import bgu.spl.mics.application.messages.TerminateBroadcast;
-import bgu.spl.mics.application.objects.CPU;
-import bgu.spl.mics.application.objects.ConferenceInformation;
-import bgu.spl.mics.application.objects.GPU;
-import bgu.spl.mics.application.objects.Student;
+import bgu.spl.mics.application.objects.*;
 
 import java.util.LinkedList;
 
@@ -23,15 +20,14 @@ public class InitializerService extends MicroService {
     private int number_of_objects;
     private LinkedList<Thread> thread_list = new LinkedList<>();
 
-    public InitializerService(Student[] student_array, GPU[] gpu_array, CPU[] cpu_array,
-                              ConferenceInformation[] conference_array, int tick_time, int duration) {
+    public InitializerService(ConfigInformation config_info) {
         super("Initializer service");
-        this.student_array = student_array;
-        this.gpu_array = gpu_array;
-        this.cpu_array = cpu_array;
-        this.conference_array = conference_array;
-        this.tick_time = tick_time;
-        this.duration = duration;
+        this.student_array = config_info.getStudentArray();
+        this.gpu_array = config_info.getGpuArray();
+        this.cpu_array = config_info.getCpuArray();
+        this.conference_array = config_info.getConferenceArray();
+        this.tick_time = config_info.getTickTime();
+        this.duration = config_info.getDuration();
         number_of_objects = gpu_array.length + cpu_array.length + conference_array.length;
     }
 

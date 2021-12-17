@@ -21,13 +21,13 @@ public class ConferenceService extends MicroService {
     /**
      * <p>
      * @param name the name of the conference service.
-     * @param conference_name the name of the conference related to this service.
-     * @param conference_date the time of the conference related to this service.
+     * @param conference the conference related to this service.
      */
-    public ConferenceService(String name, String conference_name, int conference_date) {
+    public ConferenceService(String name, ConferenceInformation conference) {
         super(name);
-        this.conference = new ConferenceInformation(conference_name,conference_date);
+        this.conference = conference;
     }
+
     /**
      * This method is called once when the event loop starts.
      * responsible to subscribe the service to {@link PublishResultsEvent} and to {@link TickBroadcast}.
@@ -36,24 +36,11 @@ public class ConferenceService extends MicroService {
      */
     @Override
     protected void initialize() {
-        subscribeEvent(PublishResultsEvent.class ,new PublishResultCallback());
+        subscribeEvent(PublishResultsEvent.class,(publishResultsEvent) ->
+                conference.addModelToConference(publishResultsEvent.getModel()));
         subscribeBroadcast(TickBroadcast.class,new TickCallback());
         subscribeBroadcast(TerminateBroadcast.class,(terminateBroadcast) -> terminate());
         sendBroadcast(new InitializeBroadcast());
-    }
-
-    /**
-     * This class defines the {@link Callback} that should be invoked when a message of class type
-     * {@link PublishResultsEvent} is taken from the message queue.
-     */
-    private class PublishResultCallback implements Callback<PublishResultsEvent> {
-        /**
-         * This function aggregate published models to hashmap of successful models via {@link ConferenceInformation}.
-         * @param publishResultsEvent the message that was taken from the message queue.
-         */
-        public void call(PublishResultsEvent publishResultsEvent) {
-            conference.addModelToConference(publishResultsEvent.getModel());
-        }
     }
 
     /**
