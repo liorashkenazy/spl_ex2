@@ -54,7 +54,9 @@ public class CRMSRunner {
             // Extracting Duration
             int duration = fileObject.get("Duration").getAsInt();
             return new ConfigInformation(student_array,gpu_array,cpu_array,conference_array,tick_time,duration);
-        } catch (Exception e){return null;}
+        } catch (Exception e) {
+            return null;
+        }
     }
 }
 

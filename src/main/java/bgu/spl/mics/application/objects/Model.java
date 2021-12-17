@@ -25,14 +25,6 @@ public class Model {
         this.result = Result.None;
     }
 
-//    public Model(String name, Data data, Student student) {
-//        this.name = name;
-//        this.data = data;
-//        this.student = student;
-//        this.status = Status.PreTrained;
-//        this.result = Result.None;
-//    }
-
     public void setStatus(Status status) { this.status = status; }
 
     public void setStudent(Student student) { this.student = student; }

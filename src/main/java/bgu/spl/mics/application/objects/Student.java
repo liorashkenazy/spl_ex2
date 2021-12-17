@@ -30,6 +30,7 @@ public class Student {
         this.publications = 0;
         this.papersRead = 0;
         this.current_model = 0;
+        setStudentForModels();
     }
 
     public String getName() { return name; }
@@ -65,6 +66,7 @@ public class Student {
 
     public int getPublications() { return publications; }
 
+    // Set the field 'Student' in each of the student's models
     public void setStudentForModels() {
         for (Model model : models) {
             model.setStudent(this);
