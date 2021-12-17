@@ -22,11 +22,12 @@ public class GPU implements Comparable<GPU> {
     private Model model;
     private Cluster cluster;
     private int next_data_index_to_process;
-    private int current_batch_ticks_left;
+    private AtomicInteger current_batch_ticks_left;
     private int data_batches_left_to_train;
-    private Runnable train_model_finished_cb;
+    private Callback<Model> train_model_finished_cb;
     private Integer next_expected_idle_time;
     private AtomicInteger vram_train_queue;
+    private final int ticks_to_train;
 
     public GPU(String type) {
         this.type = Type.valueOf(type);
@@ -34,6 +35,7 @@ public class GPU implements Comparable<GPU> {
         this.model = null;
         this.cluster = Cluster.getInstance();
         this.train_model_finished_cb = null;
+        ticks_to_train = this.type == Type.RTX3090 ? 1 : this.type == Type.RTX2080 ? 2 : 4;
     }
 
     /**
@@ -44,14 +46,11 @@ public class GPU implements Comparable<GPU> {
      */
     public boolean batchProcessed(DataBatch batch) {
         int total = vram_train_queue.getAndIncrement();
-        if (total > getMaxProcessedBatches()) {
+        if (total >= getMaxProcessedBatches()) {
             vram_train_queue.decrementAndGet();
             return false;
         }
-        if (total == 1) {
-            // If this is the first batch, signal that we can start training
-            current_batch_ticks_left = getTicksForBatch();
-        }
+        current_batch_ticks_left.compareAndSet(0, getTicksForBatch());
         return true;
     }
 
@@ -76,20 +75,21 @@ public class GPU implements Comparable<GPU> {
         if (getModel() == null) {
             return;
         }
-        if (current_batch_ticks_left != 0) {
+        if (current_batch_ticks_left.get() != 0) {
             synchronized (next_expected_idle_time) {
                 next_expected_idle_time--;
             }
-            current_batch_ticks_left--;
-            if (current_batch_ticks_left == 0) {
-                // Moving to the next batch to train
+            // Finished training one DataBatch
+            if (current_batch_ticks_left.decrementAndGet() == 0) {
+                // Moving to the next batch to train if one exist
                 if (vram_train_queue.decrementAndGet() != 0) {
-                    current_batch_ticks_left = getTicksForBatch();
+                    current_batch_ticks_left.compareAndSet(0, getTicksForBatch());
                     cluster.trainBatchFinished(this);
                 }
                 data_batches_left_to_train--;
                 if (data_batches_left_to_train == 0) {
-                    train_model_finished_cb.run();
+                    cluster.modelTrainFinished(getModel());
+                    train_model_finished_cb.call(getModel());
                 }
             }
             total_gpu_time++;
@@ -116,12 +116,17 @@ public class GPU implements Comparable<GPU> {
      * @POST: model.getStatus() == Model.Status.Training
      * @POST: getNextBatchToProcess().getStartIndex() == 1000 * getMaxProcessedBatches()
      */
-    public void trainModel(Model model, Runnable train_model_finish_cb) {
+    public void trainModel(Model model, Callback<Model> train_model_finish_cb) {
         this.model = model;
         this.next_data_index_to_process = 0;
         model.setStatus(Model.Status.Training);
         this.train_model_finished_cb = train_model_finish_cb;
         data_batches_left_to_train = model.getData().getSize() / 1000;
+
+        next_expected_idle_time = new Integer(0);
+        cluster.trainModel(this);
+        vram_train_queue = new AtomicInteger(0);
+        current_batch_ticks_left = new AtomicInteger(0);
     }
 
     /**
@@ -193,7 +198,7 @@ public class GPU implements Comparable<GPU> {
      * @return [int] The number of ticks
      * @INV getTicksForBatch() >= 0;
      */
-    public int getTicksForBatch() { return 0; }
+    public int getTicksForBatch() { return ticks_to_train; }
 
     public void addArrivalTime(int time) {
         synchronized (next_expected_idle_time) {
