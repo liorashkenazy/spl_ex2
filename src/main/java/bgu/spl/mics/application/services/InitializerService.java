@@ -83,7 +83,7 @@ public class InitializerService extends MicroService {
         public void call(TerminateBroadcast terminateBroadcast) {
             // Waiting for all the micro-service's thread to terminate
             for (int i = 0; i < thread_list.size(); i++) {
-                // If this is student thread
+                // If this is student thread it may be waiting for a test result, interrupt it in that case
                 if (i >= number_of_objects && i < number_of_objects + student_array.length) {
                     if (student_service_list.get(i - number_of_objects).isWaitingForResult()) {
                         thread_list.get(i).interrupt();
@@ -94,18 +94,6 @@ public class InitializerService extends MicroService {
                 } catch (InterruptedException e){}
             }
             terminate();
-            for (ConferenceInformation ci : conference_array) {
-                if (ci.getTicksLeft() == 0) {
-                    System.out.println("Published Conference:" + ci.toString());
-                }
-                else {
-                    System.out.println("Unpublished Conference:" + ci.toString());
-                }
-            }
-            for (Student s : student_array) {
-                System.out.println("Student: " + s.toString());
-            }
-            // TODO: implement statistics output
         }
     }
 }

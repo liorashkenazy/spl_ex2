@@ -13,7 +13,6 @@ public class Data {
     }
 
     private Type type;
-    private int processed;
     private int size;
 
     public Data(String type, int size) {
