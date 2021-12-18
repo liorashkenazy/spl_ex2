@@ -9,10 +9,10 @@ public class CPU {
 
     private int cores;
     private DataBatch data;
-    private Cluster cluster;
+    private final Cluster cluster;
     private int ticks_left;
     private int total_cpu_time;
-    private int base_process_ticks;
+    private final int base_process_ticks;
 
     /**
      * Constructs a CPU with the specified cluster and cores
