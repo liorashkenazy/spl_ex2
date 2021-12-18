@@ -46,13 +46,18 @@ public class GPU implements Comparable<GPU> {
      * @POST: @PRE(getBatchTrainQueueLength()) + 1 == getBatchTrainQueueLength()
      */
     public boolean batchProcessed(DataBatch batch) {
-        int total = vram_train_queue.getAndIncrement();
-        if (total >= getMaxProcessedBatches()) {
-            vram_train_queue.decrementAndGet();
+        if (model != null) {
+            int total = vram_train_queue.getAndIncrement();
+            if (total >= getMaxProcessedBatches()) {
+                vram_train_queue.decrementAndGet();
+                return false;
+            }
+            current_batch_ticks_left.compareAndSet(0, getTicksForBatch());
+            return true;
+        }
+        else {
             return false;
         }
-        current_batch_ticks_left.compareAndSet(0, getTicksForBatch());
-        return true;
     }
 
     /**
@@ -103,7 +108,7 @@ public class GPU implements Comparable<GPU> {
      * <p>
      * @return [int] Total GPU time used
      * @INV getTotalGPUTime() >= 0
-     * @POST: @PRE(GetTotalGPUTime()) == getTotalGPUTime()
+     * @POST: @PRE(getTotalGPUTime()) == getTotalGPUTime()
      */
     public int getTotalGPUTime() { return total_gpu_time; }
 
@@ -116,7 +121,6 @@ public class GPU implements Comparable<GPU> {
      * @param train_model_finish_cb     The completion callback
      * @POST: getModel() == model;
      * @POST: model.getStatus() == Model.Status.Training
-     * @POST: getNextBatchToProcess().getStartIndex() == 1000 * getMaxProcessedBatches()
      */
     public void trainModel(Model model, Callback<Model> train_model_finish_cb) {
         this.model = model;
@@ -145,6 +149,15 @@ public class GPU implements Comparable<GPU> {
         return null;
     }
 
+    /**
+     * returns the next dataBatch for processing and set the next index to process accordingly
+     * if there is no dataBatch left to process - returns null
+     * <p>
+     * @POST: if (@PRE(getNextBatchToProcess()) == null;
+     *          @PRE: getNextDataIndexToProcess() == getNextDataIndexToProcess()
+     * @POST: if (@PRE(getNextBatchToProcess()) != null;
+     *          @PRE: getNextDataIndexToProcess() + 1000 == getNextDataIndexToProcess()
+     */
     public DataBatch sendNextBatchToProcess() {
         DataBatch db = getNextBatchToProcess();
         if (db != null) {
@@ -168,6 +181,8 @@ public class GPU implements Comparable<GPU> {
      * Tests a deep learning model, and returns the result
      * <p>
      * @return [Boolean] True if the model is good, false otherwise
+     * @POST: {@code model}.getStatus == "Tested"
+     * @POST: {@code model}.getResult != "None"
      */
     public boolean testModel(Model model) {
         model.setStatus(Model.Status.Tested);
@@ -202,6 +217,7 @@ public class GPU implements Comparable<GPU> {
      * Returns the number of {@link DataBatch} currently in the VRAM waiting to be trained.
      * <p>
      * @return [int] The number of data batches in the queue
+     * @POST: @PRE(getBatchTrainQueueLength()) == getBatchTrainQueueLength();
      */
     public int getBatchTrainQueueLength() { return vram_train_queue.get(); }
 
@@ -210,9 +226,17 @@ public class GPU implements Comparable<GPU> {
      * <p>
      * @return [int] The number of ticks
      * @INV getTicksForBatch() >= 0;
+     * @POST: @PRE(getTicksForBatch()) == getTicksForBatch();
      */
     public int getTicksForBatch() { return ticks_to_train; }
 
+    /**
+     * <p>
+     * @POST: if ({@code time} > getNextExpectedIdleTime():
+     *              getNextExpectedIdleTime() = {@code time} + getTicksForBatch()
+     * @POST: if ({@code time} <= getNextExpectedIdleTime():
+     *              @PRE: getNextExpectedIdleTime() + getTicksForBatch() = getNextExpectedIdleTime()
+     */
     public void addArrivalTime(int time) {
         synchronized (next_expected_idle_time) {
             if (time > next_expected_idle_time) {
@@ -223,6 +247,12 @@ public class GPU implements Comparable<GPU> {
             }
         }
     }
+
+    public int getNextExpectedIdleTime() { return next_expected_idle_time; }
+
+    public int getNextDataIndexToProcess() { return next_data_index_to_process; }
+
+    public AtomicInteger getCurrentBatchTicksLeft() { return current_batch_ticks_left; }
 
     @Override
     public int compareTo(GPU gpu) {
