@@ -19,7 +19,6 @@ public class InitializerService extends MicroService {
     private int initialize_counter = 0;
     private int number_of_objects;
     private LinkedList<Thread> thread_list = new LinkedList<>();
-    private LinkedList<StudentService> student_service_list = new LinkedList<>();
 
     public InitializerService(ConfigInformation config_info) {
         super("Initializer service");
@@ -66,7 +65,6 @@ public class InitializerService extends MicroService {
                     StudentService student_service = new StudentService("StudentService"+i, student_array[i]);
                     Thread student_thread = new Thread(student_service);
                     thread_list.add(student_thread);
-                    student_service_list.add(student_service);
                     student_thread.start();
                 }
             }
@@ -82,16 +80,10 @@ public class InitializerService extends MicroService {
 
         public void call(TerminateBroadcast terminateBroadcast) {
             // Waiting for all the micro-service's thread to terminate
-            for (int i = 0; i < thread_list.size(); i++) {
-                // If this is student thread
-                if (i >= number_of_objects && i < number_of_objects + student_array.length) {
-                    if (student_service_list.get(i - number_of_objects).isWaitingForResult()) {
-                        thread_list.get(i).interrupt();
-                    }
-                }
+            for (Thread t : thread_list) {
                 try {
-                    thread_list.get(i).join();
-                } catch (InterruptedException e){}
+                    t.join();
+                } catch (InterruptedException e) { }
             }
             terminate();
             for (ConferenceInformation ci : conference_array) {
