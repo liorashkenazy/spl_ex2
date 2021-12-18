@@ -10,7 +10,7 @@ import com.google.gson.annotations.Expose;
 public class Model {
 
     enum Status {PreTrained, Training, Trained, Tested}
-    enum Result {None, Good, Bad}
+    public enum Result {None, Good, Bad}
 
     private String name;
     private Data data;
@@ -45,6 +45,8 @@ public class Model {
     public void setResult(Result res) { result = res; }
 
     public boolean isResultGood() { return result.equals(Result.Good); }
+
+    public Result getResult() { return result; }
 
     public boolean isPublished() { return published; }
 
