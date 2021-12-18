@@ -43,6 +43,16 @@ public class CRMSRunner {
                 }
             };
             gson_builder.registerTypeAdapter(Model.class, model_deserializer);
+            JsonDeserializer<ConferenceInformation> conf_deserializer = new JsonDeserializer<ConferenceInformation>() {
+                @Override
+                public ConferenceInformation deserialize(JsonElement jsonElement, Type type, JsonDeserializationContext jsonDeserializationContext) throws JsonParseException {
+                    JsonObject obj = jsonElement.getAsJsonObject();
+
+                    return new ConferenceInformation(obj.get("name").getAsString(),
+                                                    obj.get("date").getAsInt());
+                }
+            };
+            gson_builder.registerTypeAdapter(ConferenceInformation.class, conf_deserializer);
             Gson gson = gson_builder.create();
 
             // Extracting students array

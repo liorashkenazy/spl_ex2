@@ -18,7 +18,6 @@ public class InitializerService extends MicroService {
     private int duration;
     private int initialize_counter = 0;
     private int number_of_objects;
-    private int completion_count = 0;
     private LinkedList<Thread> thread_list = new LinkedList<>();
     private LinkedList<StudentService> student_service_list = new LinkedList<>();
 
@@ -83,20 +82,29 @@ public class InitializerService extends MicroService {
 
         public void call(TerminateBroadcast terminateBroadcast) {
             // Waiting for all the micro-service's thread to terminate
-            for (int i=0 ; i<thread_list.size(); i++) {
+            for (int i = 0; i < thread_list.size(); i++) {
                 // If this is student thread
-                if (i >= number_of_objects && i < number_of_objects+student_array.length) {
+                if (i >= number_of_objects && i < number_of_objects + student_array.length) {
                     if (student_service_list.get(i - number_of_objects).isWaitingForResult()) {
                         thread_list.get(i).interrupt();
                     }
                 }
                 try {
                     thread_list.get(i).join();
-                    completion_count++;
-                    System.out.println(completion_count);
                 } catch (InterruptedException e){}
             }
             terminate();
+            for (ConferenceInformation ci : conference_array) {
+                if (ci.getTicksLeft() == 0) {
+                    System.out.println("Published Conference:" + ci.toString());
+                }
+                else {
+                    System.out.println("Unpublished Conference:" + ci.toString());
+                }
+            }
+            for (Student s : student_array) {
+                System.out.println("Student: " + s.toString());
+            }
             // TODO: implement statistics output
         }
     }

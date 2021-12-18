@@ -2,6 +2,7 @@ package bgu.spl.mics.application.objects;
 
 import bgu.spl.mics.Callback;
 
+import java.util.Random;
 import java.util.concurrent.atomic.AtomicInteger;
 
 
@@ -89,6 +90,7 @@ public class GPU implements Comparable<GPU> {
                 data_batches_left_to_train--;
                 if (data_batches_left_to_train == 0) {
                     cluster.modelTrainFinished(getModel());
+                    model.setStatus(Model.Status.Trained);
                     train_model_finished_cb.call(getModel());
                 }
             }
@@ -167,7 +169,18 @@ public class GPU implements Comparable<GPU> {
      * <p>
      * @return [Boolean] True if the model is good, false otherwise
      */
-    public boolean testModel(Model model) { return false; }
+    public boolean testModel(Model model) {
+        model.setStatus(Model.Status.Tested);
+        Random rand = new Random();
+        boolean res = rand.nextDouble() > (model.getStudent().getDegree() == Student.Degree.PhD ? 0.2 : 0.4);
+        if (res) {
+            model.setResult(Model.Result.Good);
+        }
+        else {
+            model.setResult(Model.Result.Bad);
+        }
+        return res;
+    }
 
     /**
      * Returns the number of {@link DataBatch} this GPU can store in the VRAM
