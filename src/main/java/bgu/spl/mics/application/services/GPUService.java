@@ -22,11 +22,13 @@ public class GPUService extends MicroService {
     private GPU gpu;
     private LinkedList<TrainModelEvent> waiting_trainModelEvent = new LinkedList<>();
     private LinkedList<TestModelEvent> waiting_testModelEvent = new LinkedList<>();
+    private TrainModelEvent current_train_event;
     private boolean is_gpu_currently_training = false;
 
     public GPUService(String name, GPU gpu) {
         super(name);
         this.gpu = gpu;
+        this.current_train_event = null;
     }
 
     @Override
@@ -40,9 +42,9 @@ public class GPUService extends MicroService {
 
     private class TrainModelCallback implements Callback<TrainModelEvent> {
         public void call(TrainModelEvent trainModelEvent) {
-            if (!is_gpu_currently_training) {
-                gpu.trainModel(trainModelEvent.getModel(),new TrainModelFinishCallback());
-                is_gpu_currently_training = true;
+            if (current_train_event == null) {
+                gpu.trainModel(trainModelEvent.getModel(), new TrainModelFinishCallback());
+                current_train_event = trainModelEvent;
             }
             else {
                 waiting_trainModelEvent.add(trainModelEvent);
@@ -52,8 +54,8 @@ public class GPUService extends MicroService {
 
     private class TestModelCallback implements Callback<TestModelEvent> {
         public void call(TestModelEvent testModelEvent) {
-            if (!is_gpu_currently_training) {
-                gpu.testModel(testModelEvent.getModel());
+            if (current_train_event == null) {
+                complete(testModelEvent, gpu.testModel(testModelEvent.getModel()));
             }
             else {
                 waiting_testModelEvent.add(testModelEvent);
@@ -63,14 +65,16 @@ public class GPUService extends MicroService {
 
     private class TrainModelFinishCallback implements Callback<Model> {
         public void call(Model trained_model) {
-            is_gpu_currently_training = false;
+            complete(current_train_event, trained_model);
+            current_train_event = null;
             sendBroadcast(new TrainModelFinished(trained_model));
             while (!waiting_testModelEvent.isEmpty()) {
-                gpu.testModel(waiting_testModelEvent.poll().getModel());
+                TestModelEvent event = waiting_testModelEvent.poll();
+                complete(event, gpu.testModel(event.getModel()));
             }
             if (!waiting_trainModelEvent.isEmpty()) {
-                gpu.trainModel(waiting_trainModelEvent.pop().getModel(), new TrainModelFinishCallback());
-                is_gpu_currently_training = true;
+                current_train_event = waiting_trainModelEvent.pop();
+                gpu.trainModel(current_train_event.getModel(), new TrainModelFinishCallback());
             }
         }
     }

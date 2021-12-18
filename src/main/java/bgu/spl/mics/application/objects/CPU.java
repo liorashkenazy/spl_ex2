@@ -9,9 +9,10 @@ public class CPU {
 
     private int cores;
     private DataBatch data;
-    private Cluster cluster;
+    private final Cluster cluster;
     private int ticks_left;
     private int total_cpu_time;
+    private final int base_process_ticks;
 
     /**
      * Constructs a CPU with the specified cluster and cores
@@ -21,15 +22,19 @@ public class CPU {
     public CPU(int cores)
     {
         this.cores = cores;
-        this.cluster = Cluster.getInstance();
         this.data = null;
         this.ticks_left = 0;
         this.total_cpu_time = 0;
+        this.cluster = Cluster.getInstance();
+        this.base_process_ticks = 32 / cores;
     }
 
     /**
      * This function should be called every time a tick occurs. Once enough ticks have passed to finish processing the
-     * {@link DataBatch}, this function will notify the {@link Cluster} that processing is complete.
+     * {@link DataBatch}, this function will notify the {@link Cluster} that processing is complete. If no data is being
+     * processed at the moment, request data to process from the Cluster. If the CPU is currently clogged,
+     * attempt to unclog it.
+     *
      * <p>
      * @PRE: getData() != null;
      * @POST: @PRE(getTicksLeftForBatch()) - 1 == getTicksLeftForBatch()
@@ -41,11 +46,18 @@ public class CPU {
     public void tick() {
         if (data != null) {
             ticks_left--;
-            if (ticks_left == 0) {
-                // do something
-                data = null;
-            }
             total_cpu_time++;
+            if (ticks_left == 0) {
+                cluster.dataBatchProcessed(data);
+                this.data = null;
+            }
+        }
+
+        if (data == null) {
+            data = cluster.getNextBatchToProcess(this);
+            if (data != null) {
+                this.ticks_left = getTickCountForDataType(data.getData().getType());
+            }
         }
     }
 
@@ -110,6 +122,15 @@ public class CPU {
      * @return [boolean] True if the batch is in the processing queue
      */
     public boolean isDataInProcessing(DataBatch batch) { return data == batch; }
+
+    /**
+     * Calculate the number of ticks required to process {@link DataBatch} of {@link Data.Type} {@code type}
+     * <p>
+     * @return [int] The number of ticks required for this processor to process the data
+     */
+    public int getTickCountForDataType(Data.Type type) {
+        return base_process_ticks * (type == Data.Type.Tabular ? 1 : type == Data.Type.Images ? 4 : 2);
+    }
 
     public String toString() {
         return "cores: " + cores + "\n";

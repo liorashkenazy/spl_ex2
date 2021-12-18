@@ -51,7 +51,7 @@ public class Future<T> {
 	 * @POST: isDone() == true
      */
 	public synchronized void resolve (T result) {
-		if(!isResolved) {
+		if (!isResolved) {
 			this.result = result;
 			isResolved = true;
 			notifyAll();

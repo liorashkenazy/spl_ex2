@@ -50,7 +50,7 @@ public class ConferenceInformation {
      * @POST: getTicksLeft() >= 0
      */
     public void tick() {
-        ticks_left --;
+        ticks_left--;
     }
 
     /**
@@ -74,6 +74,13 @@ public class ConferenceInformation {
     }
 
     public String toString() {
-        return "conference name: " + name + " date: " + date + "\n";
+        String ret = "conference name: " + name + " models: [";
+        for (int i = 0; i < models_to_publish.size(); i++) {
+            ret += models_to_publish.get(i).getName();
+            if (i != models_to_publish.size() -1) {
+                ret += ", ";
+            }
+        }
+        return ret;
     }
 }

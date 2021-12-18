@@ -15,14 +15,15 @@ public class Model {
     private Student student;
     private Status status;
     private Result result;
+    private boolean published;
 
     public Model(String name, String type, int size) {
         this.name = name;
         this.data = new Data(type,size);
-        //TODO
         this.student = null;
         this.status = Status.PreTrained;
         this.result = Result.None;
+        this.published = false;
     }
 
     public void setStatus(Status status) { this.status = status; }
@@ -37,9 +38,15 @@ public class Model {
 
     public Status getStatus() { return status; }
 
+    public void setResult(Result res) { result = res; }
+
     public boolean isResultGood() { return result.equals(Result.Good); }
 
+    public boolean isPublished() { return published; }
+
+    public void setPublished(boolean published) { this.published = published; }
+
     public String toString() {
-        return "name: " + name + ", student name: TODO " + ", status: " + status + ", result: " + result + "\n";
+        return "name: " + name + ", student name: " + student.getName() + ", status: " + status + ", result: " + result + "\n";
     }
 }

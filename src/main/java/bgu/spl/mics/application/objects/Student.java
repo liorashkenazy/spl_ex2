@@ -30,7 +30,6 @@ public class Student {
         this.publications = 0;
         this.papersRead = 0;
         this.current_model = 0;
-        setStudentForModels();
     }
 
     public String getName() { return name; }
@@ -74,8 +73,9 @@ public class Student {
     }
 
     public String toString() {
-        String to_string = "name: " + name + ", department: " + department + ", degree: " + status + ", models:\n[" ;
-        for(int i=0; i<models.length; i++) {
+        String to_string = "name: " + name + ", department: " + department + ", degree: " + status;
+        to_string += " papers_read: " + getPapersRead() + " papers_published: " + getPublications() + ", models:\n[";
+        for (int i=0; i<models.length; i++) {
             to_string = to_string + models[i].toString();
         }
         return to_string + "] \n";

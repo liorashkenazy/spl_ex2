@@ -19,6 +19,7 @@ public class InitializerService extends MicroService {
     private int initialize_counter = 0;
     private int number_of_objects;
     private LinkedList<Thread> thread_list = new LinkedList<>();
+    private LinkedList<StudentService> student_service_list = new LinkedList<>();
 
     public InitializerService(ConfigInformation config_info) {
         super("Initializer service");
@@ -45,6 +46,9 @@ public class InitializerService extends MicroService {
             thread_list.add(cpu_thread);
             cpu_thread.start();
         }
+        // Set the cluster to work with our GPUs and CPUs
+        Cluster.getInstance().setGPUs(gpu_array);
+        Cluster.getInstance().setCPUs(cpu_array);
         for (int i = 0; i < conference_array.length; i++) {
             Thread conference_thread = new Thread(new ConferenceService("ConferenceService"+i, conference_array[i]));
             thread_list.add(conference_thread);
@@ -59,8 +63,10 @@ public class InitializerService extends MicroService {
             // If all the gpus, cpus and conference are initialized
             if (initialize_counter == number_of_objects) {
                 for(int i=0; i<student_array.length; i++){
-                Thread student_thread = new Thread(new StudentService("StudentService"+i, student_array[i]));
+                    StudentService student_service = new StudentService("StudentService"+i, student_array[i]);
+                    Thread student_thread = new Thread(student_service);
                     thread_list.add(student_thread);
+                    student_service_list.add(student_service);
                     student_thread.start();
                 }
             }
@@ -76,12 +82,29 @@ public class InitializerService extends MicroService {
 
         public void call(TerminateBroadcast terminateBroadcast) {
             // Waiting for all the micro-service's thread to terminate
-            for (Thread thread : thread_list) {
+            for (int i = 0; i < thread_list.size(); i++) {
+                // If this is student thread
+                if (i >= number_of_objects && i < number_of_objects + student_array.length) {
+                    if (student_service_list.get(i - number_of_objects).isWaitingForResult()) {
+                        thread_list.get(i).interrupt();
+                    }
+                }
                 try {
-                    thread.join();
+                    thread_list.get(i).join();
                 } catch (InterruptedException e){}
             }
             terminate();
+            for (ConferenceInformation ci : conference_array) {
+                if (ci.getTicksLeft() == 0) {
+                    System.out.println("Published Conference:" + ci.toString());
+                }
+                else {
+                    System.out.println("Unpublished Conference:" + ci.toString());
+                }
+            }
+            for (Student s : student_array) {
+                System.out.println("Student: " + s.toString());
+            }
             // TODO: implement statistics output
         }
     }

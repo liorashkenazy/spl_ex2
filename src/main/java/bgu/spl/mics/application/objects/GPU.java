@@ -2,14 +2,17 @@ package bgu.spl.mics.application.objects;
 
 import bgu.spl.mics.Callback;
 
-import java.util.LinkedList;
+import java.util.Random;
+import java.util.concurrent.atomic.AtomicInteger;
+
 
 /**
  * Passive object representing a single GPU.
  * Add all the fields described in the assignment as private fields.
  * Add fields and methods to this class as you see fit (including public methods and constructors).
  */
-public class GPU {
+public class GPU implements Comparable<GPU> {
+
     /**
      * Enum representing the type of the GPU.
      */
@@ -20,8 +23,12 @@ public class GPU {
     private Model model;
     private Cluster cluster;
     private int next_data_index_to_process;
-    private int current_batch_ticks_left;
+    private AtomicInteger current_batch_ticks_left;
+    private int data_batches_left_to_train;
     private Callback<Model> train_model_finished_cb;
+    private Integer next_expected_idle_time;
+    private AtomicInteger vram_train_queue;
+    private final int ticks_to_train;
 
     public GPU(String type) {
         this.type = Type.valueOf(type);
@@ -29,6 +36,7 @@ public class GPU {
         this.model = null;
         this.cluster = Cluster.getInstance();
         this.train_model_finished_cb = null;
+        ticks_to_train = this.type == Type.RTX3090 ? 1 : this.type == Type.RTX2080 ? 2 : 4;
     }
 
     /**
@@ -37,7 +45,15 @@ public class GPU {
      * @PRE: getBatchTrainQueueLength() < getMaxProcessedBatches()
      * @POST: @PRE(getBatchTrainQueueLength()) + 1 == getBatchTrainQueueLength()
      */
-    public void batchProcessed(DataBatch batch) { }
+    public boolean batchProcessed(DataBatch batch) {
+        int total = vram_train_queue.getAndIncrement();
+        if (total >= getMaxProcessedBatches()) {
+            vram_train_queue.decrementAndGet();
+            return false;
+        }
+        current_batch_ticks_left.compareAndSet(0, getTicksForBatch());
+        return true;
+    }
 
     /**
      * Updates the data structure upon each tick, if the current tick resulted in the completion of a {@link DataBatch}
@@ -57,17 +73,25 @@ public class GPU {
      */
     public void tick()
     {
-        if (current_batch_ticks_left != 0) {
-            current_batch_ticks_left--;
-            if (current_batch_ticks_left == 0) {
-                if (getNextBatchToProcess() != null) {
-                    // TODO: Send the batch for processing
-                    next_data_index_to_process += 1000;
+        if (getModel() == null) {
+            return;
+        }
+        if (current_batch_ticks_left.get() != 0) {
+            synchronized (next_expected_idle_time) {
+                next_expected_idle_time--;
+            }
+            // Finished training one DataBatch
+            if (current_batch_ticks_left.decrementAndGet() == 0) {
+                // Moving to the next batch to train if one exist
+                if (vram_train_queue.decrementAndGet() != 0) {
+                    current_batch_ticks_left.compareAndSet(0, getTicksForBatch());
+                    cluster.trainBatchFinished(this);
                 }
-                // TODO: Move to the next batch
-                // TODO: Revise this condition to make sure we don't have any more batches to train
-                else {
-                    train_model_finished_cb.call(model);
+                data_batches_left_to_train--;
+                if (data_batches_left_to_train == 0) {
+                    cluster.modelTrainFinished(getModel());
+                    model.setStatus(Model.Status.Trained);
+                    train_model_finished_cb.call(getModel());
                 }
             }
             total_gpu_time++;
@@ -99,13 +123,12 @@ public class GPU {
         this.next_data_index_to_process = 0;
         model.setStatus(Model.Status.Training);
         this.train_model_finished_cb = train_model_finish_cb;
-        for (int i = 0; i < getMaxProcessedBatches(); i++) {
-            DataBatch batch = getNextBatchToProcess();
-            if (batch != null) {
-                next_data_index_to_process += 1000;
-                // TODO: Send batch for actual processing
-            }
-        }
+        data_batches_left_to_train = model.getData().getSize() / 1000;
+
+        next_expected_idle_time = new Integer(0);
+        cluster.trainModel(this);
+        vram_train_queue = new AtomicInteger(0);
+        current_batch_ticks_left = new AtomicInteger(0);
     }
 
     /**
@@ -116,10 +139,22 @@ public class GPU {
      * @POST: @PRE(getNextBatch()) == getNextBatch();
      */
     public DataBatch getNextBatchToProcess() {
-        if (getModel() != null && next_data_index_to_process < getModel().getData().getSize()) {
-            return new DataBatch(getModel().getData(), next_data_index_to_process);
+        if (hasDataBatchToProcess()) {
+            return new DataBatch(getModel().getData(), next_data_index_to_process, this);
         }
         return null;
+    }
+
+    public DataBatch sendNextBatchToProcess() {
+        DataBatch db = getNextBatchToProcess();
+        if (db != null) {
+            next_data_index_to_process += 1000;
+        }
+        return db;
+    }
+
+    public boolean hasDataBatchToProcess() {
+        return getModel() != null && next_data_index_to_process < getModel().getData().getSize();
     }
 
     /**
@@ -134,7 +169,18 @@ public class GPU {
      * <p>
      * @return [Boolean] True if the model is good, false otherwise
      */
-    public boolean testModel(Model model) { return false; }
+    public boolean testModel(Model model) {
+        model.setStatus(Model.Status.Tested);
+        Random rand = new Random();
+        boolean res = rand.nextDouble() > (model.getStudent().getDegree() == Student.Degree.PhD ? 0.2 : 0.4);
+        if (res) {
+            model.setResult(Model.Result.Good);
+        }
+        else {
+            model.setResult(Model.Result.Bad);
+        }
+        return res;
+    }
 
     /**
      * Returns the number of {@link DataBatch} this GPU can store in the VRAM
@@ -157,7 +203,7 @@ public class GPU {
      * <p>
      * @return [int] The number of data batches in the queue
      */
-    public int getBatchTrainQueueLength() { return 0;}
+    public int getBatchTrainQueueLength() { return vram_train_queue.get(); }
 
     /**
      * Returns the number of ticks it takes to train a batch for this GPU
@@ -165,7 +211,27 @@ public class GPU {
      * @return [int] The number of ticks
      * @INV getTicksForBatch() >= 0;
      */
-    public int getTicksForBatch() {return 0;}
+    public int getTicksForBatch() { return ticks_to_train; }
+
+    public void addArrivalTime(int time) {
+        synchronized (next_expected_idle_time) {
+            if (time > next_expected_idle_time) {
+                next_expected_idle_time = time + getTicksForBatch();
+            }
+            else {
+                next_expected_idle_time += getTicksForBatch();
+            }
+        }
+    }
+
+    @Override
+    public int compareTo(GPU gpu) {
+        if (next_expected_idle_time == gpu.next_expected_idle_time) {
+            // Sort of a SJF
+            return (data_batches_left_to_train * getTicksForBatch()) - (gpu.data_batches_left_to_train * gpu.getTicksForBatch());
+        }
+        return next_expected_idle_time - gpu.next_expected_idle_time;
+    }
 
     public String toString() {
         return "gpu type: " + type + "\n";

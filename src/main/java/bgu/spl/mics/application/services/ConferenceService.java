@@ -4,6 +4,7 @@ import bgu.spl.mics.Callback;
 import bgu.spl.mics.MicroService;
 import bgu.spl.mics.application.messages.*;
 import bgu.spl.mics.application.objects.ConferenceInformation;
+import bgu.spl.mics.application.objects.Model;
 
 /**
  * Conference service is in charge of
@@ -64,6 +65,9 @@ public class ConferenceService extends MicroService {
         public void call(TickBroadcast tickBroadcast) {
             conference.tick();
             if (conference.getTicksLeft() == 0) {
+                for (Model model : conference.getModels()) {
+                    model.setPublished(true);
+                }
                 sendBroadcast(new PublishConferenceBroadcast(conference));
                 terminate();
             }

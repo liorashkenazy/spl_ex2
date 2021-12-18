@@ -5,7 +5,6 @@ import bgu.spl.mics.Callback;
 import bgu.spl.mics.Future;
 import bgu.spl.mics.application.messages.*;
 import bgu.spl.mics.application.objects.Student;
-import bgu.spl.mics.application.objects.Model;
 
 /**
  * Student is responsible for sending the {@link TrainModelEvent},
@@ -19,10 +18,12 @@ import bgu.spl.mics.application.objects.Model;
 public class StudentService extends MicroService {
 
     private Student student;
+    private boolean is_waiting_for_result = false;
 
     public StudentService(String name, Student student) {
         super(name);
         this.student = student;
+        this.student.setStudentForModels();
     }
 
     @Override
@@ -37,13 +38,20 @@ public class StudentService extends MicroService {
         sendBroadcast(new InitializeBroadcast());
     }
 
+    public boolean isWaitingForResult () {
+        return is_waiting_for_result;
+    }
+
     private class TrainModelCompleteCallback implements Callback<TrainModelFinished> {
         public void call(TrainModelFinished event) {
             if (event.getModel().getStudent() == student) {
                 student.modelFinished(event.getModel());
                 Future<Boolean> res = sendEvent(new TestModelEvent(event.getModel()));
-                if (res.get()) {
-                    sendEvent(new PublishResultsEvent(event.getModel()));
+                is_waiting_for_result = true;
+                if (res.get() != null) {
+                    is_waiting_for_result = false;
+                    if (res.get())
+                        sendEvent(new PublishResultsEvent(event.getModel()));
                 }
                 if (student.getCurrentModel() != null) {
                     sendEvent(new TrainModelEvent(student.getCurrentModel()));
