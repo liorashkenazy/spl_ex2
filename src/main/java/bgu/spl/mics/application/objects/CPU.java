@@ -32,16 +32,19 @@ public class CPU {
     /**
      * This function should be called every time a tick occurs. Once enough ticks have passed to finish processing the
      * {@link DataBatch}, this function will notify the {@link Cluster} that processing is complete. If no data is being
-     * processed at the moment, request data to process from the Cluster. If the CPU is currently clogged,
-     * attempt to unclog it.
+     * processed at the moment, request data to process from the Cluster.
      *
      * <p>
-     * @PRE: getData() != null;
-     * @POST: @PRE(getTicksLeftForBatch()) - 1 == getTicksLeftForBatch()
-     * @POST: if (getTicksLeftForBatch() == 0):
-     *          getData() != @PRE: getData();
-     * @POST: if (getData() != null):
-     *           @PRE(getTotalCPUTime()) + 1 == getTotalCPUTime()
+     * @POST: if(@PRE: getData() != null)
+     *              @PRE(getTicksLeftForBatch()) - 1 == getTicksLeftForBatch()
+     * @POST: if(@PRE: getData() != null)
+     *              @PRE(getTotalCPUTime()) + 1 == getTotalCPUTime()
+     * @POST: if ((@PRE: getTicksLeftForBatch() == 1):
+     *              getData() != @PRE: getData();
+     * @POST: if ((@PRE: getTicksLeftForBatch() == 1):
+     *              if (getData() != null):
+     *                  getTicksLeftForBatch() = getTickCountForDataType(data.getData().getType())
+     *
      */
     public void tick() {
         if (data != null) {
@@ -65,45 +68,16 @@ public class CPU {
      * returns the number of ticks left to process the current {@link DataBatch}
      * <p>
      * @return [int] The number of remaining ticks to finish processing the current data
-     * @PRE: getData() != null;
      * @INV getTicksLeftForBatch() >= 0;
+     * @POST: @PRE(getTicksLeftForBatch()) == getTicksLeftForBatch()
      */
     public int getTicksLeftForBatch() { return ticks_left; }
-
-    /**
-     * Start processing new data
-     * <p>
-     * @return The current {@link DataBatch} being processed
-     * @POST: isDataInProcessing(data) == true
-     * @POST: if (@PRE(getData() == null):
-     *          getData() == data
-     * @POST: if (@PRE(getData()) == null):
-     *          if (data.getType() == Tabular:
-     *              getTicksLeftForBatch() == 32 / cores
-     *          if (data.getType() == Text:
-     *              getTicksLeftForBatch() == (32 / cores) * 2
-     *          if (data.getType() == Image:
-     *              getTicksLeftForBatch() == (32 / cores) * 4
-     */
-    public void addDataForProcessing(DataBatch data) {
-        this.data = data;
-        ticks_left = (32 / cores);
-        switch (this.data.getData().getType()) {
-            case Text:
-                ticks_left *= 2;
-                break;
-            case Images:
-                ticks_left *= 4;
-                break;
-            default:
-                break;
-        }
-    }
 
     /**
      * Return the current data that is being processed
      * <p>
      * @return The current {@link DataBatch} being processed
+     * @POST: @PRE(getData()) == getData()()
      */
     public DataBatch getData() { return data; }
 
@@ -112,7 +86,7 @@ public class CPU {
      * <p>
      * @return [int] Total CPU time used
      * @INV getTotalCPUTime() >= 0
-     * @POST: @PRE(GetTotalCPUTime()) == getTotalCPUTime()
+     * @POST: @PRE(getTotalCPUTime()) == getTotalCPUTime()
      */
     public int getTotalCPUTime() { return total_cpu_time; }
 
@@ -127,10 +101,18 @@ public class CPU {
      * Calculate the number of ticks required to process {@link DataBatch} of {@link Data.Type} {@code type}
      * <p>
      * @return [int] The number of ticks required for this processor to process the data
+     * @POST: if (type = "Tabular")
+     *          getTickCountForDataType() = getBaseProcessTicks() * 1
+     * @POST: if (type = "Text")
+     *          getTickCountForDataType() = getBaseProcessTicks() * 2
+     * @POST: if (type = "Images")
+     *          getTickCountForDataType() = getBaseProcessTicks() * 4
      */
     public int getTickCountForDataType(Data.Type type) {
         return base_process_ticks * (type == Data.Type.Tabular ? 1 : type == Data.Type.Images ? 4 : 2);
     }
+
+    public int getBaseProcessTicks() { return base_process_ticks; }
 
     public String toString() {
         return "cores: " + cores + "\n";
