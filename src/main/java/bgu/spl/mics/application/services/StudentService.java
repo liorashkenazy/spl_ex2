@@ -32,8 +32,9 @@ public class StudentService extends MicroService {
         subscribeBroadcast(TrainModelFinished.class, new TrainModelCompleteCallback());
         subscribeBroadcast(PublishConferenceBroadcast.class, (published) -> student.readPapers(published.getModels()));
         subscribeBroadcast(TerminateBroadcast.class, (terminateBroadcast) -> terminate());
+        student.sortModels();
         // Send TrainModelEvent only if student has model to train
-        if(student.getCurrentModel() != null) {
+        if (student.getCurrentModel() != null) {
             sendEvent(new TrainModelEvent(student.getCurrentModel()));
         }
         sendBroadcast(new InitializeBroadcast());
