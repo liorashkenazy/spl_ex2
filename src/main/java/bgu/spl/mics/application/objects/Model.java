@@ -5,7 +5,7 @@ package bgu.spl.mics.application.objects;
  * Add all the fields described in the assignment as private fields.
  * Add fields and methods to this class as you see fit (including public methods and constructors).
  */
-public class Model {
+public class Model implements Comparable<Model> {
 
     enum Status {PreTrained, Training, Trained, Tested}
     public enum Result {None, Good, Bad}
@@ -50,5 +50,21 @@ public class Model {
 
     public String toString() {
         return "name: " + name + ", student name: " + student.getName() + ", status: " + status + ", result: " + result + "\n";
+    }
+
+    private int getPriority() {
+        int multiplier = 1;
+        if (getData().getType() == Data.Type.Images) {
+            multiplier = 4;
+        }
+        else if (getData().getType() == Data.Type.Text) {
+            multiplier = 2;
+        }
+        return getData().getSize() * multiplier;
+    }
+
+    @Override
+    public int compareTo(Model model) {
+        return getPriority() - model.getPriority();
     }
 }

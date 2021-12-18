@@ -1,5 +1,6 @@
 package bgu.spl.mics.application.objects;
 
+import java.util.Arrays;
 import java.util.LinkedList;
 
 /**
@@ -70,6 +71,10 @@ public class Student {
         for (Model model : models) {
             model.setStudent(this);
         }
+    }
+
+    public void sortModels() {
+        Arrays.sort(models);
     }
 
     public String toString() {
