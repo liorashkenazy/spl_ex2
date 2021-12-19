@@ -75,9 +75,12 @@ public class InitializerService extends MicroService {
 
         public void call(TerminateBroadcast terminateBroadcast) {
             // Waiting for all the micro-service's thread to terminate
-            for (Thread t : thread_list) {
+            for (int i = 0; i < thread_list.size(); i++) {
+                if (i >= number_of_objects && i < number_of_objects + conf.getStudentArray().length) {
+                    thread_list.get(i).interrupt();
+                }
                 try {
-                    t.join();
+                    thread_list.get(i).join();
                 } catch (InterruptedException e) { }
             }
             terminate();
