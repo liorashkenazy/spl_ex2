@@ -28,6 +28,8 @@ public class Cluster {
 	}
 
 	public void setGPUs(GPU[] gpus) {
+		gpu_awaiting_batches = new HashMap<GPU, ConcurrentLinkedQueue<DataBatch>>();
+		active_gpus_queue = new PriorityQueue<GPU>();
 		this.gpus = gpus;
 		for (GPU gp : gpus) {
 			gpu_awaiting_batches.put(gp, new ConcurrentLinkedQueue<DataBatch>());
