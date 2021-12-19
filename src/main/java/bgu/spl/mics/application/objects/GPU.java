@@ -121,6 +121,8 @@ public class GPU implements Comparable<GPU> {
      * @param train_model_finish_cb     The completion callback
      * @POST: getModel() == model;
      * @POST: model.getStatus() == Model.Status.Training
+     * @POST: getNextBatchToProcess() != null;
+     * @POST: getNextBatchToProcess().getStartIndex() == 0;
      */
     public void trainModel(Model model, Callback<Model> train_model_finish_cb) {
         this.model = model;
@@ -138,9 +140,7 @@ public class GPU implements Comparable<GPU> {
     /**
      * returns the next {@link DataBatch} that should be sent for processing
      * <p>
-     * @PRE: getModel() != null
-     * @PRE: next_data_index != getModel().getData().getSize()
-     * @POST: @PRE(getNextBatch()) == getNextBatch();
+     * @POST: @PRE(getNextBatchToProcess()) == getNextBatchToProcess();
      */
     public DataBatch getNextBatchToProcess() {
         if (hasDataBatchToProcess()) {
@@ -150,7 +150,7 @@ public class GPU implements Comparable<GPU> {
     }
 
     /**
-     * returns the next dataBatch for processing and set the next index to process accordingly
+     * returns the next dataBatch for processing and set the next index to process accordingly.
      * if there is no dataBatch left to process - returns null
      * <p>
      * @POST: if (@PRE(getNextBatchToProcess()) == null;
@@ -250,13 +250,17 @@ public class GPU implements Comparable<GPU> {
 
     public int getNextExpectedIdleTime() { return next_expected_idle_time; }
 
-    public int getNextDataIndexToProcess() { return next_data_index_to_process; }
-
     public AtomicInteger getCurrentBatchTicksLeft() { return current_batch_ticks_left; }
 
+    public int getDataBatchesLeftToTrain() { return data_batches_left_to_train; }
+
+    /**
+     * @POST: @PRE:{@code gpu}.getNextExpectedIdleTime() ==  {@code gpu}.getNextExpectedIdleTime()
+     * @POST: @PRE:getNextExpectedIdleTime() == getNextExpectedIdleTim()
+     */
     @Override
     public int compareTo(GPU gpu) {
-        if (next_expected_idle_time == gpu.next_expected_idle_time) {
+        if (next_expected_idle_time.equals(gpu.next_expected_idle_time)) {
             // Sort of a SJF
             return (data_batches_left_to_train * getTicksForBatch()) - (gpu.data_batches_left_to_train * gpu.getTicksForBatch());
         }

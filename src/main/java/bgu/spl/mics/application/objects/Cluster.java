@@ -78,6 +78,10 @@ public class Cluster {
 		return db;
 	}
 
+	public boolean isGpuTrainingModel(GPU gpu) {
+		return active_gpus_queue.contains(gpu);
+	}
+
 	public void summarize() {
 		for (GPU gp : gpus) {
 			stats.addGPUTime(gp.getTotalGPUTime());
