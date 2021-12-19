@@ -1,6 +1,9 @@
 package bgu.spl.mics.application.objects;
 
 import bgu.spl.mics.application.messages.PublishConferenceBroadcast;
+import com.google.gson.annotations.Expose;
+import com.google.gson.annotations.SerializedName;
+
 import java.util.LinkedList;
 
 /**
@@ -11,7 +14,9 @@ public class ConferenceInformation {
 
     private String name;
     private int date;
+    @SerializedName("publications")
     private LinkedList<Model> models_to_publish;
+    @Expose (serialize = false)
     private int ticks_left;
 
     /**

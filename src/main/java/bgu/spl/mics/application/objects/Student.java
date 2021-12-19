@@ -1,5 +1,7 @@
 package bgu.spl.mics.application.objects;
 
+import com.google.gson.annotations.Expose;
+
 import java.util.LinkedList;
 
 /**
@@ -19,7 +21,11 @@ public class Student {
     private Degree status;
     private int publications;
     private int papersRead;
+    @Expose (serialize = false)
     private Model[] models;
+    @Expose (deserialize = false)
+    private LinkedList<Model> trainedModels;
+    @Expose (serialize = false)
     private int current_model;
 
     public Student(String name, String department, String status, Model[] models) {
@@ -32,15 +38,24 @@ public class Student {
         this.current_model = 0;
     }
 
+    public LinkedList<Model> getTrainedModels() {
+        if (trainedModels == null) {
+            trainedModels = new LinkedList<Model>();
+        }
+        return trainedModels;
+    }
+
     public String getName() { return name; }
 
     public Degree getDegree() { return status; }
 
     public Model[] getModels() { return models; }
 
-    //TODO: delete argument
+    public String getDepartment() { return department; }
+
     public void modelFinished(Model model) {
         current_model++;
+        getTrainedModels().add(model);
     }
 
     public Model getCurrentModel() {
