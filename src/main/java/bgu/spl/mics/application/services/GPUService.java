@@ -23,7 +23,6 @@ public class GPUService extends MicroService {
     private LinkedList<TrainModelEvent> waiting_trainModelEvent = new LinkedList<>();
     private LinkedList<TestModelEvent> waiting_testModelEvent = new LinkedList<>();
     private TrainModelEvent current_train_event;
-    private boolean is_gpu_currently_training = false;
 
     public GPUService(String name, GPU gpu) {
         super(name);
@@ -33,10 +32,10 @@ public class GPUService extends MicroService {
 
     @Override
     protected void initialize() {
-        subscribeEvent(TrainModelEvent.class,new TrainModelCallback());
-        subscribeEvent(TestModelEvent.class,new TestModelCallback());
-        subscribeBroadcast(TickBroadcast.class,(tickBroadcast) -> gpu.tick());
-        subscribeBroadcast(TerminateBroadcast.class, (terminateBroadcast) -> terminate());
+        subscribeEvent(TrainModelEvent.class, new TrainModelCallback());
+        subscribeEvent(TestModelEvent.class, new TestModelCallback());
+        subscribeBroadcast(TickBroadcast.class, (tickBroadcast) -> gpu.tick());
+        subscribeBroadcast(TerminateBroadcast.class, new TerminateCallback());
         sendBroadcast(new InitializeBroadcast());
     }
 
@@ -76,6 +75,17 @@ public class GPUService extends MicroService {
                 current_train_event = waiting_trainModelEvent.pop();
                 gpu.trainModel(current_train_event.getModel(), new TrainModelFinishCallback());
             }
+        }
+    }
+
+    private class TerminateCallback implements Callback<TerminateBroadcast> {
+        public void call(TerminateBroadcast c) {
+            // Make sure no user is stuck waiting for a test result
+            while (!waiting_testModelEvent.isEmpty()) {
+                TestModelEvent event = waiting_testModelEvent.poll();
+                complete(event, Model.Result.None);
+            }
+            terminate();
         }
     }
 }

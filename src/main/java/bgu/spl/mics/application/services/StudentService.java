@@ -4,6 +4,7 @@ import bgu.spl.mics.MicroService;
 import bgu.spl.mics.Callback;
 import bgu.spl.mics.Future;
 import bgu.spl.mics.application.messages.*;
+import bgu.spl.mics.application.objects.Model;
 import bgu.spl.mics.application.objects.Student;
 
 /**
@@ -38,20 +39,13 @@ public class StudentService extends MicroService {
         sendBroadcast(new InitializeBroadcast());
     }
 
-    public boolean isWaitingForResult () {
-        return is_waiting_for_result;
-    }
-
     private class TrainModelCompleteCallback implements Callback<TrainModelFinished> {
         public void call(TrainModelFinished event) {
             if (event.getModel().getStudent() == student) {
                 student.modelFinished(event.getModel());
-                Future<Boolean> res = sendEvent(new TestModelEvent(event.getModel()));
-                is_waiting_for_result = true;
-                if (res.get() != null) {
-                    is_waiting_for_result = false;
-                    if (res.get())
-                        sendEvent(new PublishResultsEvent(event.getModel()));
+                Future<Model.Result> res = sendEvent(new TestModelEvent(event.getModel()));
+                if (res != null && res.get() == Model.Result.Good) {
+                    sendEvent(new PublishResultsEvent(event.getModel()));
                 }
                 if (student.getCurrentModel() != null) {
                     sendEvent(new TrainModelEvent(student.getCurrentModel()));

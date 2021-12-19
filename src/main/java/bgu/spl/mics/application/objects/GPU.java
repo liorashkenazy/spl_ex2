@@ -184,7 +184,7 @@ public class GPU implements Comparable<GPU> {
      * @POST: {@code model}.getStatus == "Tested"
      * @POST: {@code model}.getResult != "None"
      */
-    public boolean testModel(Model model) {
+    public Model.Result testModel(Model model) {
         model.setStatus(Model.Status.Tested);
         Random rand = new Random();
         boolean res = rand.nextDouble() > (model.getStudent().getDegree() == Student.Degree.PhD ? 0.2 : 0.4);
@@ -194,7 +194,7 @@ public class GPU implements Comparable<GPU> {
         else {
             model.setResult(Model.Result.Bad);
         }
-        return res;
+        return model.getResult();
     }
 
     /**

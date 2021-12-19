@@ -37,4 +37,8 @@ public class Statistics {
         ans += "]";
         return ans;
     }
+
+    public int getTotalCPUTime() { return total_cpu_time; }
+    public int getTotalGPUTime() { return total_gpu_time; }
+    public int getTotalBatches() { return data_batches_processed.get(); }
 }
