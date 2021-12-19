@@ -48,8 +48,6 @@ public class Model {
 
     public boolean isResultGood() { return result.equals(Result.Good); }
 
-    public Result getResult() { return result; }
-
     public boolean isPublished() { return published; }
 
     public void setPublished(boolean published) { this.published = published; }
