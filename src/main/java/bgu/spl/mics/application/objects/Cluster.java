@@ -28,6 +28,8 @@ public class Cluster {
 	}
 
 	public void setGPUs(GPU[] gpus) {
+		gpu_awaiting_batches = new HashMap<GPU, ConcurrentLinkedQueue<DataBatch>>();
+		active_gpus_queue = new PriorityQueue<GPU>();
 		this.gpus = gpus;
 		for (GPU gp : gpus) {
 			gpu_awaiting_batches.put(gp, new ConcurrentLinkedQueue<DataBatch>());
@@ -76,6 +78,10 @@ public class Cluster {
 			}
 		}
 		return db;
+	}
+
+	public boolean isGpuTrainingModel(GPU gpu) {
+		return active_gpus_queue.contains(gpu);
 	}
 
 	public void summarize() {

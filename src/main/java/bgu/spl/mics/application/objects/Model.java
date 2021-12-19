@@ -42,11 +42,11 @@ public class Model {
 
     public Status getStatus() { return status; }
 
+    public Result getResult() {return result; }
+
     public void setResult(Result res) { result = res; }
 
     public boolean isResultGood() { return result.equals(Result.Good); }
-
-    public Result getResult() { return result; }
 
     public boolean isPublished() { return published; }
 
